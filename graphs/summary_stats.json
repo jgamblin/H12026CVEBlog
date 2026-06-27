@@ -1,0 +1,22 @@
+{
+  "nvd": {
+    "total_all_time": 343497,
+    "total_2025": 34601,
+    "total_2024": 23657,
+    "yoy_change": 46.2611489199814,
+    "cvss_v3_coverage_2025": 93.37013381116152,
+    "cwe_coverage_2025": 95.34695529030954,
+    "avg_cvss_2025": 6.881976042343765,
+    "critical_2025": 3446,
+    "high_2025": 13378
+  },
+  "cvelist": {
+    "total_all_time": 343717,
+    "total_2025": 34811,
+    "published_2025": "34811",
+    "rejected_2025": "0",
+    "unique_cnas_2025": 338,
+    "unique_vendors_2025": 6695,
+    "top_cna": "GitHub_M"
+  }
+}
