@@ -376,6 +376,19 @@ def calculate_stats(df, cvelist_df, full_nvd_df=None, full_cvelist_df=None):
         ].value_counts()
         stats["cwe_movers"] = _movers(cur_c, pri_c, 5)
 
+    # OpenClaw assigner breakdown: who actually issued these CVEs (third-party
+    # researchers vs the project itself). This is the story behind the count.
+    if cvelist_df is not None and "vendor" in cvelist_df.columns:
+        ocv = cvelist_df[same_elapsed_mask(cvelist_df, TARGET_YEAR, asof)]
+        ocv = ocv[ocv["vendor"].astype(str).str.lower().str.strip() == "openclaw"]
+        if len(ocv) and "assigner_short_name" in ocv.columns:
+            ac = ocv["assigner_short_name"].value_counts()
+            stats["openclaw"] = {
+                "total": int(len(ocv)),
+                "top_assigner": str(ac.index[0]),
+                "top_assigner_count": int(ac.iloc[0]),
+            }
+
     return stats
 
 
@@ -533,19 +546,23 @@ At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and th
                 f"Among weakness types, {cwe_link(m['name'])} ({nm}) {verb} the top five."
             )
             break
-    # Editorial spotlight: OpenClaw embraced the CVE lifecycle under pressure.
+    # Editorial spotlight: OpenClaw, where most CVEs come from third-party
+    # researchers (VulnCheck) rather than the project itself.
     openclaw_spotlight = ""
-    if any("openclaw" in str(p).lower() for p in stats.get("new_products", [])):
+    oc = stats.get("openclaw")
+    if oc and oc.get("total"):
+        share = oc["top_assigner_count"] / max(oc["total"], 1) * 100
         openclaw_spotlight = (
-            "\n\n**Spotlight: OpenClaw.** The standout newcomer is OpenClaw, Peter Steinberger's "
-            "viral local AI agent and one of the fastest-growing open-source projects of the cycle "
-            "(he told the story on [Lex Fridman Podcast #491](https://lexfridman.com/peter-steinberger/), "
-            "which includes a segment on its security). A project that barely existed a year ago is "
-            "already among the most-reported products of the half. What stands out is the response: "
-            "instead of quietly patching, the OpenClaw project embraced the CVE lifecycle and began "
-            "issuing CVEs for its advisories as the reports came in, a textbook case of a fast-moving "
-            "open-source project adopting coordinated disclosure under pressure. I track it at "
-            "[OpenClawCVEs](https://github.com/jgamblin/OpenClawCVEs)."
+            "\n\n**Spotlight: OpenClaw.** A project that barely existed a year ago, OpenClaw "
+            "(Peter Steinberger's viral local AI agent, the subject of "
+            "[Lex Fridman Podcast #491](https://lexfridman.com/peter-steinberger/)) is already one "
+            f"of the most-reported products of the half with **{oc['total']:,} CVEs**. The striking "
+            f"part is who is doing the reporting: **{oc['top_assigner']} alone assigned "
+            f"{oc['top_assigner_count']:,}** of them ({share:.0f}%), disclosed steadily across the "
+            "half rather than in a single dump. That is what a research magnet looks like, an outside "
+            "team systematically working a hot new target. To its credit the project also embraced "
+            "the CVE lifecycle itself, issuing advisories through GitHub as reports came in. I track "
+            "its CVEs at [OpenClawCVEs](https://github.com/jgamblin/OpenClawCVEs)."
         )
 
     if changed_bits or openclaw_spotlight:
