@@ -387,6 +387,60 @@ def graph_cumulative_growth(yearly_data, save_path=None):
 
 
 # =============================================================================
+# SOCIAL: Shareable stat card (for launch posts)
+# =============================================================================
+def graph_scorecard(tiles, title, subtitle="", save_path=None):
+    """Render a shareable 2x3 stat card for social media.
+
+    ``tiles`` is a list of (big_value, label, highlight_bool) tuples, up to 6.
+    Highlighted tiles use the alert color to pull the eye to the lead numbers.
+    """
+    print("Generating: Social Scorecard...")
+
+    fig, ax = plt.subplots(figsize=(12, 6.75))  # ~16:9 for social
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+
+    ax.text(
+        0.5, 0.95, title, ha="center", va="top",
+        fontsize=23, fontweight="bold", color=COLORS["text"],
+    )
+    if subtitle:
+        ax.text(
+            0.5, 0.865, subtitle, ha="center", va="top",
+            fontsize=13, color=COLORS["secondary"],
+        )
+    ax.plot([0.06, 0.94], [0.80, 0.80], color=COLORS["light"], linewidth=1)
+
+    xs = [0.20, 0.50, 0.80]
+    ys = [0.57, 0.25]
+    for i, (big, label, highlight) in enumerate(tiles[:6]):
+        x = xs[i % 3]
+        y = ys[i // 3]
+        color = COLORS["alert"] if highlight else COLORS["primary"]
+        ax.text(
+            x, y, str(big), ha="center", va="center",
+            fontsize=33, fontweight="bold", color=color,
+        )
+        ax.text(
+            x, y - 0.115, label, ha="center", va="center",
+            fontsize=12.5, color=COLORS["secondary"],
+        )
+
+    ax.text(
+        0.5, 0.05,
+        "Source: NVD  |  CISA KEV  |  CVEForecast        jerrygamblin.com  ·  cve.icu",
+        ha="center", va="center", fontsize=10, color=COLORS["neutral"],
+    )
+
+    plt.tight_layout()
+    if save_path:
+        save_figure(fig, save_path)
+    return fig
+
+
+# =============================================================================
 # GRAPH 4: H1 2026 Monthly Distribution
 # =============================================================================
 def graph_period_monthly(df, save_path=None):

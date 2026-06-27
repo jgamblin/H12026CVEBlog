@@ -66,6 +66,7 @@ graph_time_to_publish = graphs_module.graph_time_to_publish
 graph_day_of_week = graphs_module.graph_day_of_week
 graph_top_days = graphs_module.graph_top_days
 graph_top_products = graphs_module.graph_top_products
+graph_scorecard = graphs_module.graph_scorecard
 normalize_data = graphs_module.normalize_data
 
 
@@ -230,6 +231,17 @@ def calculate_stats(df, cvelist_df, full_nvd_df=None, full_cvelist_df=None):
     est_full_h1 = stats["cves_per_day"] * PERIOD_DAYS
     stats["projected_seasonal"] = round(est_full_h1 / h1_share) if h1_share else 0
     stats["projected_full_year"] = stats["projected_runrate"]  # back-compat
+
+    # Human-scale framings for the lead.
+    stats["minutes_between"] = (1440 / stats["cves_per_day"]) if stats["cves_per_day"] else 0
+    # Most recent full year whose total is still below this half's count.
+    fy = df.groupby("year").size()
+    h1_total = stats["total_2025"]
+    exceeds = [
+        y for y in range(TARGET_YEAR - 1, 1998, -1) if int(fy.get(y, 0)) < h1_total
+    ]
+    stats["h1_exceeds_year"] = exceeds[0] if exceeds else None
+    stats["h1_exceeds_year_total"] = int(fy.get(exceeds[0], 0)) if exceeds else 0
 
     # H1-over-H1 comparison across three years, identical elapsed window each.
     cvss_col0 = "cvss_v3" if "cvss_v3" in df.columns else "cvss_v4"
@@ -405,21 +417,36 @@ def generate_blog(
     proj_lo = min(stats["projected_runrate"], stats["projected_seasonal"])
     proj_hi = max(stats["projected_runrate"], stats["projected_seasonal"])
     direction = "an increase" if stats["yoy_change"] > 0 else "a decrease"
-    kev_teaser = (
-        f" Only **{kev['h1_published_in_kev']}** of them are already known-exploited."
-        if kev.get("h1_published_in_kev") is not None
+    # Lead-framing helpers
+    kev_in = kev.get("h1_published_in_kev")
+    kev_pct = (kev_in / max(stats["total_2025"], 1) * 100) if kev_in is not None else None
+    exceeds_year = stats.get("h1_exceeds_year")
+    scale_clause = (
+        f", more in six months than any full year before {exceeds_year + 1} "
+        f"(all of {exceeds_year} finished at {stats['h1_exceeds_year_total']:,})"
+        if exceeds_year
         else ""
     )
+    if kev_pct is not None:
+        exploit_line = (
+            f" And yet only **{kev_in} of them, {kev_pct:.2f}%, are known to be exploited.** "
+            "That gap is the story of 2026 so far: we are minting CVEs faster than ever while "
+            "real-world exploitation stays flat, so the hard problem is signal-to-noise, not patch volume."
+        )
+    else:
+        exploit_line = ""
 
     blog = f"""# {PERIOD_TITLE} CVE Data Review
 
-<!-- Featured image suggestion: graphs/01_cves_by_year.png (first-half CVEs by year; 2026 towers over every prior H1) -->
+<!-- Featured image suggestion: graphs/00_scorecard.png (mid-year stat card) or graphs/01_cves_by_year.png (2026 towers over every prior H1) -->
 
-We are halfway through 2026, so it is time for the mid-year check-in on Common Vulnerabilities and Exposures (CVE) data. This review covers everything published in the first half of 2026 ({PERIOD_RANGE}): how the volume is tracking, where severity is landing, what is actually being exploited, and which organizations are driving the numbers. Comparisons are made against the same elapsed window a year ago (January 1 through {asof_label}), so a partial half is never measured against a full one.
+We are halfway through 2026, so it is time for the mid-year CVE check-in. The short version: the volume curve has gone vertical while exploitation has not. This review covers everything published in the first half of 2026 ({PERIOD_RANGE}), the volume, the severity, what is actually being exploited, and who is driving the numbers, all measured against the same elapsed window a year ago so a partial half is never compared to a full one.
 
 ## TL;DR
 
-**The first half of 2026 saw {stats["total_2025"]:,} CVEs published**, or **{stats["cves_per_day"]:.1f} per day**, {direction} of **{abs(stats["yoy_change"]):.1f}%** over the same window in {PRIOR_YEAR} ({stats["total_2024"]:,}).{kev_teaser} Straight-line projections put the full year between **{proj_lo:,} and {proj_hi:,}**, with the all-time total now past **{stats["total_all_time"]:,} CVEs** since 1999.{window_note}
+**The first half of 2026 produced {stats["total_2025"]:,} CVEs{scale_clause}.** That works out to one new CVE every **{stats["minutes_between"]:.1f} minutes**, {direction} of **{abs(stats["yoy_change"]):.1f}%** over the same window in {PRIOR_YEAR} ({stats["total_2024"]:,}).{exploit_line}
+
+At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and the all-time catalog has now passed **{stats["total_all_time"]:,} CVEs** since 1999.{window_note}
 
 > **Note**: All statistics in this report exclude rejected CVEs to provide an accurate count of active vulnerabilities.
 
@@ -466,11 +493,12 @@ We are halfway through 2026, so it is time for the mid-year check-in on Common V
         gap = fc - proj_hi
         if gap > 0:
             interp = (
-                f"That is **{gap:,} above** the top of the straight-line range. The model is "
-                f"betting on a heavier second half, which is the historical pattern (the "
-                f"December disclosure surge does most of the work). If H2 simply mirrors H1, the "
-                f"year lands nearer **{proj_hi:,}**; if the back half accelerates the way it did "
-                f"in {PRIOR_YEAR}, **{fc:,}** is in reach. Worth revisiting in the year-end review."
+                f"That is **{gap:,} above** the top of the straight-line range, and here is where I "
+                f"will plant a flag: **I think the model is high.** Two independent methods both land "
+                f"near {proj_hi:,}, and the forecast's entire gap to them rests on a heavy second-half "
+                f"surge that still has to show up. **My call is the year closes nearer {proj_hi:,} than "
+                f"{fc:,}.** I will happily eat those words in the December review if H2 accelerates the "
+                f"way the model expects, but the burden of proof is on the surge."
             )
         else:
             interp = "That sits inside the straight-line range, so 2026 is tracking the model."
@@ -508,9 +536,27 @@ We are halfway through 2026, so it is time for the mid-year check-in on Common V
                 f"Among weakness types, {cwe_link(m['name'])} ({nm}) {verb} the top five."
             )
             break
-    if changed_bits:
+    # Editorial spotlight: OpenClaw embraced the CVE lifecycle under pressure.
+    openclaw_spotlight = ""
+    if any("openclaw" in str(p).lower() for p in stats.get("new_products", [])):
+        openclaw_spotlight = (
+            "\n\n**Spotlight: OpenClaw.** The standout newcomer is OpenClaw, Peter Steinberger's "
+            "viral local AI agent and one of the fastest-growing open-source projects of the cycle "
+            "(he told the story on [Lex Fridman Podcast #491](https://lexfridman.com/peter-steinberger/), "
+            "which includes a segment on its security). A project that barely existed a year ago is "
+            "already among the most-reported products of the half. What stands out is the response: "
+            "instead of quietly patching, the OpenClaw project embraced the CVE lifecycle and began "
+            "issuing CVEs for its advisories as the reports came in, a textbook case of a fast-moving "
+            "open-source project adopting coordinated disclosure under pressure. I track it at "
+            "[OpenClawCVEs](https://github.com/jgamblin/OpenClawCVEs)."
+        )
+
+    if changed_bits or openclaw_spotlight:
         changed_section = (
-            "## What Changed in H1 2026\n\n" + " ".join(changed_bits) + "\n\n---\n\n"
+            "## What Changed in H1 2026\n\n"
+            + " ".join(changed_bits)
+            + openclaw_spotlight
+            + "\n\n---\n\n"
         )
     else:
         changed_section = ""
@@ -815,6 +861,40 @@ CVE rejections occur for several reasons:
             f"Volume is a triage problem, not a patch-everything problem."
         )
 
+    # Role-based "what this means" + a forward-looking prediction.
+    if kev.get("h1_published_in_kev") is not None:
+        _kpct = kev["h1_published_in_kev"] / max(stats["total_2025"], 1) * 100
+        defender_line = (
+            f"- **If you defend a network:** ignore the headline count. With only **{_kpct:.2f}%** of "
+            f"H1 CVEs known-exploited, exploitability is your filter, not volume. Wire CISA KEV and "
+            f"EPSS into triage and let the long tail wait."
+        )
+    else:
+        defender_line = (
+            "- **If you defend a network:** triage on exploitability, not raw counts. Wire CISA KEV "
+            "and EPSS into your pipeline."
+        )
+    role_section = (
+        "### What this means for you\n\n"
+        + defender_line
+        + "\n- **If you run a CNA:** the center of gravity has shifted to platforms and aggregators. "
+        "Throughput and data quality, CPE coverage especially, are the differentiators now.\n"
+        + f"- **If you consume NVD data:** enrichment is the bottleneck. CPE at {stats['cpe_coverage']:.1f}% "
+        "means nearly half of new CVEs cannot be auto-matched to a product, and volume only widens that gap.\n"
+    )
+    if forecast and forecast.get("full_year_forecast"):
+        watching = (
+            f"My call from the scorecard stands: 2026 closes nearer **{proj_hi:,}** than the "
+            f"**{forecast['full_year_forecast']:,}** forecast. Two things would change my mind: a "
+            f"December disclosure surge bigger than {PRIOR_YEAR}'s, or another OpenClaw-style project "
+            "flooding the catalog. The year-end review settles it."
+        )
+    else:
+        watching = (
+            f"The straight-line pace points to roughly **{proj_lo:,} to {proj_hi:,}** for the year. "
+            "The year-end review settles it."
+        )
+
     blog += f"""---
 
 ## Conclusions
@@ -831,9 +911,10 @@ CVE rejections occur for several reasons:
 
 5. **Coverage gaps persist**: CVSS and CWE are well covered, but CPE sits at {stats["cpe_coverage"]:.1f}%, which still hampers automated matching.{kev_takeaway}
 
+{role_section}
 ### What I'm watching in H2
 
-The straight-line pace points to roughly {proj_lo:,}-{proj_hi:,} for the year, while [CVEForecast](https://www.cveforecast.org) calls for more. Whether 2026 closes nearer the linear projection or the model's number comes down to the usual second-half acceleration. I'll settle it in the year-end review.
+{watching}
 
 ---
 
@@ -986,6 +1067,29 @@ def main():
     )
     if top_products is None:
         top_products = []
+
+    # Social scorecard (shareable launch image)
+    proj_lo = min(stats["projected_runrate"], stats["projected_seasonal"])
+    proj_hi = max(stats["projected_runrate"], stats["projected_seasonal"])
+    kev_txt = (
+        f"{kev['h1_published_in_kev']}"
+        if kev and kev.get("h1_published_in_kev") is not None
+        else "n/a"
+    )
+    scorecard_tiles = [
+        (f"{stats['total_2025']:,}", "CVEs in H1 2026", True),
+        (f"{stats['cves_per_day']:.0f}/day", f"1 every {stats['minutes_between']:.0f} min", False),
+        (f"+{stats['yoy_change']:.0f}%", f"vs H1 {PRIOR_YEAR} (same window)", False),
+        (kev_txt, "known-exploited (CISA KEV)", True),
+        (f"{round(proj_lo / 1000)}-{round(proj_hi / 1000)}K", "projected full year", False),
+        (str(stats.get("top_cna", "n/a")).split("_")[0], "top CVE issuer", False),
+    ]
+    graph_scorecard(
+        scorecard_tiles,
+        "2026 First Half CVE Data: Mid-Year Scorecard",
+        subtitle=f"January 1 - {stats['asof_label']}, 2026",
+        save_path=GRAPHS_DIR / "00_scorecard.png",
+    )
 
     # Generate blog
     print("\nGenerating blog.md...")

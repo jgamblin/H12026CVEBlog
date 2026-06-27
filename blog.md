@@ -1,12 +1,14 @@
 # 2026 First Half CVE Data Review
 
-<!-- Featured image suggestion: graphs/01_cves_by_year.png (first-half CVEs by year; 2026 towers over every prior H1) -->
+<!-- Featured image suggestion: graphs/00_scorecard.png (mid-year stat card) or graphs/01_cves_by_year.png (2026 towers over every prior H1) -->
 
-We are halfway through 2026, so it is time for the mid-year check-in on Common Vulnerabilities and Exposures (CVE) data. This review covers everything published in the first half of 2026 (Jan 1 - Jun 30, 2026): how the volume is tracking, where severity is landing, what is actually being exploited, and which organizations are driving the numbers. Comparisons are made against the same elapsed window a year ago (January 1 through Jun 26), so a partial half is never measured against a full one.
+We are halfway through 2026, so it is time for the mid-year CVE check-in. The short version: the volume curve has gone vertical while exploitation has not. This review covers everything published in the first half of 2026 (Jan 1 - Jun 30, 2026), the volume, the severity, what is actually being exploited, and who is driving the numbers, all measured against the same elapsed window a year ago so a partial half is never compared to a full one.
 
 ## TL;DR
 
-**The first half of 2026 saw 34,601 CVEs published**, or **195.5 per day**, an increase of **48.8%** over the same window in 2025 (23,252). Only **84** of them are already known-exploited. Straight-line projections put the full year between **71,352 and 72,046**, with the all-time total now past **343,497 CVEs** since 1999. Numbers run through Jun 26; the window closes June 30, so treat them as a floor.
+**The first half of 2026 produced 34,601 CVEs, more in six months than any full year before 2024 (all of 2023 finished at 28,817).** That works out to one new CVE every **7.4 minutes**, an increase of **48.8%** over the same window in 2025 (23,252). And yet only **84 of them, 0.24%, are known to be exploited.** That gap is the story of 2026 so far: we are minting CVEs faster than ever while real-world exploitation stays flat, so the hard problem is signal-to-noise, not patch volume.
+
+At this pace the year projects to roughly **71,352 to 72,046**, and the all-time catalog has now passed **343,497 CVEs** since 1999. Numbers run through Jun 26; the window closes June 30, so treat them as a floor.
 
 > **Note**: All statistics in this report exclude rejected CVEs to provide an accurate count of active vulnerabilities.
 
@@ -45,13 +47,15 @@ To keep the comparison honest while 2026 is still in progress, each year is meas
 
 At **195.5 CVEs/day**, two independent methods converge on the full-year number: the run-rate extrapolates to **71,352**, and a seasonality-adjusted estimate (using 2025's 49% first-half share) to **72,046**.
 
-[CVEForecast](https://www.cveforecast.org) projects **82,878 CVEs** for full-year 2026 (LinearRegression, MAPE 14.35). That is **10,832 above** the top of the straight-line range. The model is betting on a heavier second half, which is the historical pattern (the December disclosure surge does most of the work). If H2 simply mirrors H1, the year lands nearer **72,046**; if the back half accelerates the way it did in 2025, **82,878** is in reach. Worth revisiting in the year-end review.
+[CVEForecast](https://www.cveforecast.org) projects **82,878 CVEs** for full-year 2026 (LinearRegression, MAPE 14.35). That is **10,832 above** the top of the straight-line range, and here is where I will plant a flag: **I think the model is high.** Two independent methods both land near 72,046, and the forecast's entire gap to them rests on a heavy second-half surge that still has to show up. **My call is the year closes nearer 72,046 than 82,878.** I will happily eat those words in the December review if H2 accelerates the way the model expects, but the burden of proof is on the surge.
 
 ---
 
 ## What Changed in H1 2026
 
 **GitHub_M** is the busiest CNA at **6,730** assignments. New to the most-affected product list this year: **Chrome, Openclaw**. Among weakness types, [CWE-862](https://cwe.mitre.org/data/definitions/862.html) (Missing Authorization) climbed to #2 in the top five.
+
+**Spotlight: OpenClaw.** The standout newcomer is OpenClaw, Peter Steinberger's viral local AI agent and one of the fastest-growing open-source projects of the cycle (he told the story on [Lex Fridman Podcast #491](https://lexfridman.com/peter-steinberger/), which includes a segment on its security). A project that barely existed a year ago is already among the most-reported products of the half. What stands out is the response: instead of quietly patching, the OpenClaw project embraced the CVE lifecycle and began issuing CVEs for its advisories as the reports came in, a textbook case of a fast-moving open-source project adopting coordinated disclosure under pressure. I track it at [OpenClawCVEs](https://github.com/jgamblin/OpenClawCVEs).
 
 ---
 
@@ -278,9 +282,15 @@ CVE rejections occur for several reasons:
 
 6. **Exploitation stays rare**: just 84 of 34,601 H1 CVEs (0.24%) are in CISA KEV. Volume is a triage problem, not a patch-everything problem.
 
+### What this means for you
+
+- **If you defend a network:** ignore the headline count. With only **0.24%** of H1 CVEs known-exploited, exploitability is your filter, not volume. Wire CISA KEV and EPSS into triage and let the long tail wait.
+- **If you run a CNA:** the center of gravity has shifted to platforms and aggregators. Throughput and data quality, CPE coverage especially, are the differentiators now.
+- **If you consume NVD data:** enrichment is the bottleneck. CPE at 58.5% means nearly half of new CVEs cannot be auto-matched to a product, and volume only widens that gap.
+
 ### What I'm watching in H2
 
-The straight-line pace points to roughly 71,352-72,046 for the year, while [CVEForecast](https://www.cveforecast.org) calls for more. Whether 2026 closes nearer the linear projection or the model's number comes down to the usual second-half acceleration. I'll settle it in the year-end review.
+My call from the scorecard stands: 2026 closes nearer **72,046** than the **82,878** forecast. Two things would change my mind: a December disclosure surge bigger than 2025's, or another OpenClaw-style project flooding the catalog. The year-end review settles it.
 
 ---
 
@@ -295,4 +305,4 @@ Two primary data sources, plus two enrichment feeds:
 
 Everything here is reproducible. The full pipeline (Python, pandas, matplotlib) is on GitHub at [jgamblin/H12026CVEBlog](https://github.com/jgamblin/H12026CVEBlog), and it leans on the free CVE tooling I build at [RogoLabs](https://rogolabs.net): [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and [cveforecast.org](https://www.cveforecast.org).
 
-*Data collected and analyzed on June 26, 2026.*
+*Data collected and analyzed on June 27, 2026.*
