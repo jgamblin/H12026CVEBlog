@@ -21,6 +21,7 @@ from style_config import (
     ANNOTATION_SIZE,
     get_thousands_formatter,
     save_figure,
+    prettify_name,
 )
 from period_config import (
     period_mask,
@@ -564,16 +565,27 @@ def graph_cvss_distribution(df, save_path=None):
     ax.set_ylabel("Number of CVEs")
     ax.set_title(f"CVSS Score Distribution ({PERIOD_LABEL})")
 
-    # Add statistics lines
+    # Add statistics lines (labeled so the two dashed lines are distinguishable)
     mean_score = df_2025[cvss_col].mean()
     median_score = df_2025[cvss_col].median()
-    ax.axvline(x=mean_score, color=COLORS["alert"], linestyle="--", linewidth=2.5)
-    ax.axvline(x=median_score, color=COLORS["secondary"], linestyle="--", linewidth=2.5)
+    ax.axvline(
+        x=mean_score,
+        color=COLORS["alert"],
+        linestyle="--",
+        linewidth=2.5,
+        label=f"Mean: {mean_score:.2f}",
+    )
+    ax.axvline(
+        x=median_score,
+        color=COLORS["secondary"],
+        linestyle="--",
+        linewidth=2.5,
+        label=f"Median: {median_score:.2f}",
+    )
+    ax.legend(loc="upper right")
 
     # Stats box
-    textstr = (
-        f"Mean: {mean_score:.2f}\nMedian: {median_score:.2f}\nTotal: {len(df_2025):,}"
-    )
+    textstr = f"Scored CVEs: {len(df_2025):,}"
     ax.text(
         0.02,
         0.98,
@@ -728,7 +740,7 @@ def graph_top_cnas(df, top_n=20, save_path=None):
     ax.set_yticklabels(cna_counts.index)
 
     ax.set_xlabel("Number of CVEs")
-    ax.set_title(f"Top {top_n} CVE Numbering Authorities (CNAs) ({PERIOD_LABEL})")
+    ax.set_title(f"Top {top_n} CVE Numbering Authorities ({PERIOD_LABEL})")
 
     for bar in bars:
         width = bar.get_width()
@@ -1030,7 +1042,7 @@ def graph_cvss_by_year(df, save_path=None):
     # All boxes same primary color
     for i, box in enumerate(bp["boxes"]):
         box.set_facecolor(COLORS["primary"])
-        box.set_alpha(0.7)
+        box.set_alpha(0.9)
         box.set_edgecolor(COLORS["text"])
 
     # Style whiskers and caps
@@ -1123,7 +1135,7 @@ def graph_top_vendors(df, top_n=20, save_path=None):
     )
 
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(vendor_counts.index)
+    ax.set_yticklabels([prettify_name(v) for v in vendor_counts.index])
 
     ax.set_xlabel("Number of CVEs")
     ax.set_title(f"Top {top_n} Vendors by CVE Count ({PERIOD_LABEL})")
@@ -1251,8 +1263,11 @@ def graph_day_of_week(df, save_path=None):
 
     day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-    # Highlight Tuesday (Patch Tuesday effect)
-    bar_colors = [COLORS["alert"] if i == 1 else COLORS["primary"] for i in range(7)]
+    # Highlight the actual busiest day (do not assume it is Tuesday).
+    peak_idx = int(day_counts.values.argmax())
+    bar_colors = [
+        COLORS["alert"] if i == peak_idx else COLORS["primary"] for i in range(7)
+    ]
     bars = ax.bar(day_names, day_counts.values, color=bar_colors, edgecolor="white")
 
     ax.set_xlabel("Day of Week")
@@ -1406,9 +1421,7 @@ def graph_top_products(df, top_n=15, save_path=None):
     exclude_values = ["n/a", "unknown", "none", "na", "n_a", "*", ""]
     df_2025 = df_2025[~df_2025["product_clean"].isin(exclude_values)]
 
-    df_2025["product_clean"] = df_2025["product_clean"].str.replace("_", " ")
-    df_2025["product_clean"] = df_2025["product_clean"].str.title()
-
+    # Count on the normalized slug, prettify only for display labels.
     product_counts = df_2025["product_clean"].value_counts().head(top_n)
 
     fig, ax = plt.subplots(figsize=FIG_SIZE_TALL)
@@ -1419,7 +1432,7 @@ def graph_top_products(df, top_n=15, save_path=None):
     )
 
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(product_counts.index)
+    ax.set_yticklabels([prettify_name(p) for p in product_counts.index])
 
     ax.set_xlabel("Number of CVEs")
     ax.set_title(f"Top {top_n} Most Vulnerable Products ({PERIOD_LABEL})")
@@ -1593,7 +1606,6 @@ def main():
         )
         graph_top_cwes(nvd_df, save_path=GRAPHS_DIR / "07_top_cwes.png")
         graph_data_quality(nvd_df, save_path=GRAPHS_DIR / "09_data_quality.png")
-        graph_cve_id_ranges(nvd_df, save_path=GRAPHS_DIR / "12_cve_id_ranges.png")
         graph_cvss_by_year(nvd_df, save_path=GRAPHS_DIR / "13_cvss_by_year.png")
 
         # New deep dive graphs
@@ -1611,11 +1623,7 @@ def main():
         print(f"\nCVE List V5 Data: {len(cvelist_df):,} CVEs")
 
         graph_top_cnas(cvelist_df, save_path=GRAPHS_DIR / "08_top_cnas.png")
-        graph_cve_states(cvelist_df, save_path=GRAPHS_DIR / "11_cve_states.png")
         graph_top_vendors(cvelist_df, save_path=GRAPHS_DIR / "14_top_vendors.png")
-        graph_time_to_publish(
-            cvelist_df, save_path=GRAPHS_DIR / "15_time_to_publish.png"
-        )
 
     # Generate summary statistics
     generate_summary_stats(nvd_df, cvelist_df)

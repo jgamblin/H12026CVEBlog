@@ -53,7 +53,7 @@ At **195.5 CVEs/day**, two independent methods converge on the full-year number:
 
 ## What Changed in H1 2026
 
-**GitHub_M** is the busiest CNA at **6,730** assignments. New to the most-affected product list this year: **Chrome, Openclaw**. Among weakness types, [CWE-862](https://cwe.mitre.org/data/definitions/862.html) (Missing Authorization) climbed to #2 in the top five.
+**GitHub_M** is the busiest CNA at **6,730** assignments. New to the most-affected product list this year: **Chrome, OpenClaw**. Among weakness types, [CWE-862](https://cwe.mitre.org/data/definitions/862.html) (Missing Authorization) climbed to #2 in the top five.
 
 **Spotlight: OpenClaw.** The standout newcomer is OpenClaw, Peter Steinberger's viral local AI agent and one of the fastest-growing open-source projects of the cycle (he told the story on [Lex Fridman Podcast #491](https://lexfridman.com/peter-steinberger/), which includes a segment on its security). A project that barely existed a year ago is already among the most-reported products of the half. What stands out is the response: instead of quietly patching, the OpenClaw project embraced the CVE lifecycle and began issuing CVEs for its advisories as the reports came in, a textbook case of a fast-moving open-source project adopting coordinated disclosure under pressure. I track it at [OpenClawCVEs](https://github.com/jgamblin/OpenClawCVEs).
 
@@ -187,7 +187,7 @@ The vendors with the most CVEs attributed to their products this year (each link
 | 1 | [Linux](https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=false&cpe_vendor=linux) | 2,516 |
 | 2 | [Google](https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=false&cpe_vendor=google) | 1,418 |
 | 3 | [Microsoft](https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=false&cpe_vendor=microsoft) | 863 |
-| 4 | [Openclaw](https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=false&cpe_vendor=openclaw) | 537 |
+| 4 | [OpenClaw](https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=false&cpe_vendor=openclaw) | 537 |
 | 5 | [Oracle Corporation](https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=false&cpe_vendor=oracle+corporation) | 445 |
 
 ---
@@ -204,7 +204,7 @@ Drilling past vendors to specific products, the H1 2026 leaders:
 |------|---------|----------|
 | 1 | Linux Kernel | 1,915 |
 | 2 | Chrome | 1,200 |
-| 3 | Openclaw | 534 |
+| 3 | OpenClaw | 534 |
 | 4 | Windows 10 | 372 |
 | 5 | Android | 303 |
 

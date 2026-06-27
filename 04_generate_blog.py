@@ -16,7 +16,7 @@ import importlib.util
 import json
 from urllib.parse import quote_plus
 
-from style_config import CWE_NAMES
+from style_config import CWE_NAMES, prettify_name
 from period_config import (
     period_mask,
     same_elapsed_mask,
@@ -58,11 +58,8 @@ graph_top_cwes = graphs_module.graph_top_cwes
 graph_top_cnas = graphs_module.graph_top_cnas
 graph_data_quality = graphs_module.graph_data_quality
 graph_rejected_cves = graphs_module.graph_rejected_cves
-graph_cve_states = graphs_module.graph_cve_states
-graph_cve_id_ranges = graphs_module.graph_cve_id_ranges
 graph_cvss_by_year = graphs_module.graph_cvss_by_year
 graph_top_vendors = graphs_module.graph_top_vendors
-graph_time_to_publish = graphs_module.graph_time_to_publish
 graph_day_of_week = graphs_module.graph_day_of_week
 graph_top_days = graphs_module.graph_top_days
 graph_top_products = graphs_module.graph_top_products
@@ -174,7 +171,7 @@ def cwe_link(cwe):
 
 def pretty(name):
     """Human-friendly display of a normalized vendor/product slug."""
-    return str(name).replace("_", " ").title()
+    return prettify_name(name)
 
 
 def vendor_link(vendor):

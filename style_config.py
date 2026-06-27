@@ -33,13 +33,13 @@ COLORS = {
     'grid': '#e2e8f0',         # Light grey - gridlines
 }
 
-# Severity colors - muted professional palette
+# Severity colors - semantic ramp (severity has its own color language)
 SEVERITY_COLORS = {
-    'CRITICAL': '#0c2340',     # Darkest navy
-    'HIGH': '#1e3a5f',         # Dark navy
-    'MEDIUM': '#3d6a99',       # Medium blue
-    'LOW': '#6b9dc9',          # Light blue
-    'NONE': '#94a3b8'          # Slate grey
+    'CRITICAL': '#dc2626',     # Red - alarm
+    'HIGH': '#ea580c',         # Orange
+    'MEDIUM': '#f59e0b',       # Amber
+    'LOW': '#64748b',          # Slate
+    'NONE': '#cbd5e1'          # Light slate
 }
 
 # =============================================================================
@@ -164,10 +164,50 @@ def apply_style():
 
 
 def format_thousands(x, pos):
-    """Format axis labels with K suffix for thousands"""
+    """Format axis labels with K suffix, keeping a decimal for half-thousands.
+
+    Avoids duplicate tick labels (e.g. 1500 and 2000 both rendering as a
+    truncated value) by showing 1.5K when the value is not a whole thousand.
+    """
     if x >= 1000:
-        return f'{int(x/1000)}K'
+        v = x / 1000
+        return f'{v:.0f}K' if abs(v - round(v)) < 1e-9 else f'{v:.1f}K'
     return f'{int(x)}'
+
+
+# =============================================================================
+# NAME PRETTIFICATION - vendor/product display names
+# =============================================================================
+NAME_ALIASES = {
+    'openclaw': 'OpenClaw',
+    'macos': 'macOS',
+    'mac_os_x': 'macOS',
+    'ipados': 'iPadOS',
+    'ios': 'iOS',
+    'iphone_os': 'iOS',
+    'imagemagick': 'ImageMagick',
+    'gitlab': 'GitLab',
+    'github': 'GitHub',
+    'ibm': 'IBM',
+    'php': 'PHP',
+    'wordpress': 'WordPress',
+    'd-link': 'D-Link',
+    'totolink': 'TOTOLINK',
+    'openssl': 'OpenSSL',
+    'freebsd': 'FreeBSD',
+    'phpgurukul': 'PHPGurukul',
+    'mongodb': 'MongoDB',
+    'postgresql': 'PostgreSQL',
+}
+
+
+def prettify_name(name):
+    """Human-friendly display for a vendor/product slug, with known overrides."""
+    s = str(name).strip()
+    key = s.lower()
+    if key in NAME_ALIASES:
+        return NAME_ALIASES[key]
+    return s.replace('_', ' ').title()
 
 
 def get_thousands_formatter():
