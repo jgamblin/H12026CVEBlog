@@ -14,6 +14,7 @@ import warnings
 import importlib.util
 
 import json
+import re
 from urllib.parse import quote_plus
 
 from style_config import CWE_NAMES, prettify_name
@@ -182,6 +183,82 @@ def vendor_link(vendor):
         "&results_type=overview&search_type=all&isCpeNameSearch=false&cpe_vendor="
     )
     return f"[{pretty(vendor)}]({base}{slug})"
+
+
+# Known first-party sub-CNAs: CNA short name -> parent vendor it assigns for.
+_FIRST_PARTY_CNA = {
+    "chrome": "google",
+    "android": "google",
+    "github_m": "github",
+}
+
+
+def _is_self_assigned(cna, name):
+    """True when the dominant CNA looks like the vendor/product itself."""
+    a = re.sub(r"[^a-z0-9]", "", str(cna).lower())
+    b = re.sub(r"[^a-z0-9]", "", str(name).lower())
+    if not a or not b:
+        return False
+    if a in b or b in a:
+        return True
+    parent = _FIRST_PARTY_CNA.get(str(cna).lower())
+    return bool(parent and re.sub(r"[^a-z0-9]", "", parent) in b)
+
+
+def cna_concentration(cvelist_df, asof, top_n=15, threshold=0.6, fields=("vendor",)):
+    """Flag report callouts dominated by a single THIRD-PARTY CNA.
+
+    When one CNA that is not the vendor itself assigns most of a vendor's CVEs
+    (as VulnCheck did for OpenClaw), a "top vendor" callout can reflect one
+    researcher group's disclosure push rather than broad activity. Self-assigned
+    dominance (the Linux CNA for Linux, Chrome for Google, etc.) is expected and
+    skipped. Defaults to vendors only; product names rarely match their owning
+    CNA textually, so checking them is noisy. Returns the flagged items.
+    """
+    flagged = []
+    if cvelist_df is None or "assigner_short_name" not in cvelist_df.columns:
+        return flagged
+
+    cur = cvelist_df[same_elapsed_mask(cvelist_df, TARGET_YEAR, asof)]
+    exclude = {"n/a", "unknown", "none", "na", "n_a", "*", ""}
+    for field in fields:
+        if field not in cur.columns:
+            continue
+        sub = cur[cur[field].notna()].copy()
+        sub["_key"] = sub[field].astype(str).str.lower().str.strip()
+        sub = sub[~sub["_key"].isin(exclude)]
+        for name, total in sub["_key"].value_counts().head(top_n).items():
+            ac = sub[sub["_key"] == name]["assigner_short_name"].value_counts()
+            if ac.empty:
+                continue
+            top_cna, top_ct = str(ac.index[0]), int(ac.iloc[0])
+            share = top_ct / total
+            if share >= threshold and not _is_self_assigned(top_cna, name):
+                flagged.append(
+                    {
+                        "type": field,
+                        "name": name,
+                        "total": int(total),
+                        "top_cna": top_cna,
+                        "top_cna_count": top_ct,
+                        "share": round(share * 100, 1),
+                    }
+                )
+
+    if flagged:
+        print("\n" + "!" * 64)
+        print("CNA CONCENTRATION WARNING: callouts dominated by one third-party CNA")
+        print("!" * 64)
+        for f in sorted(flagged, key=lambda x: -x["share"]):
+            print(
+                f"  {f['type']:7} {f['name'][:26]:26} {f['total']:>5} CVEs  "
+                f"{f['share']:>5.1f}% from {f['top_cna']}"
+            )
+        print(
+            "Review before publishing: a spotlight on any of these reflects one "
+            "group's disclosure push, not broad activity.\n"
+        )
+    return flagged
 
 
 # =============================================================================
@@ -999,6 +1076,13 @@ def main():
     # Calculate statistics
     print("\nCalculating statistics...")
     stats = calculate_stats(df, cvelist_df, full_nvd_df, full_cvelist_df)
+
+    # Sanity check: warn when a top product/vendor is dominated by one outside CNA
+    # (the OpenClaw/VulnCheck pattern) so an inflated callout never ships silently.
+    concentration = cna_concentration(cvelist_df, stats["asof"])
+    if concentration:
+        with open(OUTPUT_DIR / "cna_concentration.json", "w") as f:
+            json.dump(concentration, f, indent=2)
 
     # Generate all graphs using imported functions from 03_generate_graphs.py
     print("\nGenerating graphs...")

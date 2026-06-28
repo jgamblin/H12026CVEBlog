@@ -305,4 +305,4 @@ Two primary data sources, plus two enrichment feeds:
 
 Everything here is reproducible. The full pipeline (Python, pandas, matplotlib) is on GitHub at [jgamblin/H12026CVEBlog](https://github.com/jgamblin/H12026CVEBlog), and it leans on the free CVE tooling I build at [RogoLabs](https://rogolabs.net): [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and [cveforecast.org](https://www.cveforecast.org).
 
-*Data collected and analyzed on June 27, 2026.*
+*Data collected and analyzed on June 28, 2026.*
