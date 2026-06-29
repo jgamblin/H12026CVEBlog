@@ -70,8 +70,10 @@ before posting · 🗓️ resolves on the July 1 re-run.
 
 ## 🔎 You must personally verify before publishing
 
-- **OpenClaw facts** — Lex Fridman episode **#491**, Peter Steinberger's relationship to the project, and "disclosed steadily across the half." A wrong podcast number or misattribution about a *named real person* is worse than any stat being off. (One reviewer reported these as verified-real; two could not confirm — treat as **unconfirmed** until you check.)
-- **OpenClaw counts** — 537 (vendor) vs 534 (product) vs 500 / 93% (VulnCheck share), reconciled against OpenClawCVEs after the July 1 run.
+- ✅ **OpenClaw citation — VERIFIED** against the YouTube video (YFjfBk8HI5o). Title: "OpenClaw: The Viral AI Agent that Broke the Internet - Peter Steinberger | Lex Fridman Podcast **#491**." Steinberger is the creator (ex-PSPDFKit, built OpenClaw Nov 2025, later joined OpenAI); "viral," "local AI agent," and "barely existed a year ago" all check out. No misattribution risk on the named person / episode / descriptor.
+  - ⚖️ Link target: blog points to `lexfridman.com/peter-steinberger/` (unconfirmed slug); consider swapping to the YouTube URL or confirming the lexfridman.com page resolves.
+  - 🔎 Still open: "disclosed steadily across the half" (confirm from your OpenClawCVEs dates).
+- 🔎 **OpenClaw counts** — 537 (vendor) vs 534 (product) vs 500 / 93% (VulnCheck share), reconciled against OpenClawCVEs after the July 1 run. (Data-internal; not a fact about Steinberger.)
 - **Handles** — `@rogolabs` (X), the infosec.exchange instance, and the Bluesky handle.
 
 ---
