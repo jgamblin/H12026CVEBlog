@@ -171,6 +171,18 @@ def cwe_link(cwe):
     return f"[{cwe}](https://cwe.mitre.org/data/definitions/{num}.html)"
 
 
+# Public-facing display names for raw CNA assigner_short_name values. The raw
+# catalog id (e.g. "GitHub_M") should never appear in reader-facing copy.
+_CNA_DISPLAY = {
+    "github_m": "GitHub",
+}
+
+
+def cna_display(name):
+    """Human-friendly public name for a CNA short_name."""
+    return _CNA_DISPLAY.get(str(name).lower(), str(name))
+
+
 def pretty(name):
     """Human-friendly display of a normalized vendor/product slug."""
     return prettify_name(name)
@@ -519,9 +531,10 @@ def generate_blog(
     )
     if kev_pct is not None:
         exploit_line = (
-            f" And yet only **{kev_in} of them, {kev_pct:.2f}%, are known to be exploited.** "
-            "That gap is the story of 2026 so far: we are minting CVEs faster than ever while "
-            "real-world exploitation stays flat, so the hard problem is signal-to-noise, not patch volume."
+            f" And yet only **{kev_in} of them ({kev_pct:.2f}%)** are known to be exploited (CISA KEV) "
+            "so far, a floor that will rise as the cohort ages and exploitation is confirmed. "
+            "That gap is the story of 2026 so far: we are minting CVEs faster than ever while confirmed "
+            "exploitation stays rare, so the hard problem is signal-to-noise, not patch volume."
         )
     else:
         exploit_line = ""
@@ -533,6 +546,11 @@ def generate_blog(
         k: stats[k] / _tot * 100 for k in ("critical", "high", "medium", "low")
     }
     crit_high_pct = (stats["critical"] + stats["high"]) / _tot * 100
+    # CVEs with no CVSS severity (the ~6.6% the table would otherwise drop, so
+    # the percentage column sums to 100 instead of silently to ~98%).
+    _sev_sum = stats["critical"] + stats["high"] + stats["medium"] + stats["low"]
+    sev_unscored = max(stats["total_2025"] - _sev_sum, 0)
+    sev_pct["unscored"] = sev_unscored / _tot * 100
 
     blog = f"""# {PERIOD_TITLE} CVE Data Review
 
@@ -592,7 +610,7 @@ At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and th
         if gap > 0:
             interp = (
                 f"That is **{gap:,} above** the top of the straight-line range, and here is where I "
-                f"will plant a flag: **I think the model is high.** Two independent methods both land "
+                f"will plant a flag: **I think the model is high.** Both simple extrapolations land "
                 f"near {proj_hi:,}, and the forecast's entire gap to them rests on a heavy second-half "
                 f"surge that still has to show up. **My call is the year closes nearer {proj_hi:,} than "
                 f"{fc:,}.** I will happily eat those words in the December review if H2 accelerates the "
@@ -601,7 +619,8 @@ At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and th
         else:
             interp = "That sits inside the straight-line range, so 2026 is tracking the model."
         forecast_block = (
-            f"[CVEForecast]({url}) projects **{fc:,} CVEs** for full-year 2026{model_note}. {interp}"
+            f"[CVEForecast]({url}), one of my own RogoLabs tools, projects **{fc:,} CVEs** for "
+            f"full-year 2026{model_note}, so I am partly arguing with my own model here. {interp}"
         )
     else:
         forecast_block = (
@@ -614,9 +633,10 @@ At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and th
     movers = stats.get("cna_movers", [])
     if movers:
         leader = movers[0]
-        new_cnas = [m["name"] for m in movers if m["status"] == "new"]
+        new_cnas = [cna_display(m["name"]) for m in movers if m["status"] == "new"]
         lead_txt = (
-            f"**{leader['name']}** is the busiest CNA at **{leader['count']:,}** assignments"
+            f"**{cna_display(leader['name'])}** is the busiest CNA at "
+            f"**{leader['count']:,}** assignments"
         )
         if new_cnas:
             joined = ", ".join(new_cnas)
@@ -647,10 +667,12 @@ At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and th
             f"of the most-reported products of the half with **{oc['total']:,} CVEs**. The striking "
             f"part is who is doing the reporting: **{oc['top_assigner']} alone assigned "
             f"{oc['top_assigner_count']:,}** of them ({share:.0f}%), disclosed steadily across the "
-            "half rather than in a single dump. That is what a research magnet looks like, an outside "
-            "team systematically working a hot new target. To its credit the project also embraced "
-            "the CVE lifecycle itself, issuing advisories through GitHub as reports came in. I track "
-            "its CVEs at [OpenClawCVEs](https://github.com/jgamblin/OpenClawCVEs)."
+            "half rather than in a single dump. That concentration says more about researcher attention "
+            f"than code quality: {oc['top_assigner']}, whose remit is emerging and exploited-in-the-wild "
+            "threats, is exactly the kind of team that systematically covers a fast-growing new target, "
+            "and concentrated third-party research on a hot AI agent is the coverage you would want. To "
+            "its credit the project embraced the CVE lifecycle itself, issuing advisories through GitHub "
+            "as reports came in. I track its CVEs at [OpenClawCVEs](https://github.com/jgamblin/OpenClawCVEs)."
         )
 
     if changed_bits or openclaw_spotlight:
@@ -677,7 +699,7 @@ To keep the comparison honest while 2026 is still in progress, each year is meas
 
 ## Forecast Scorecard: Are We On Pace?
 
-At **{stats["cves_per_day"]:.1f} CVEs/day**, two independent methods converge on the full-year number: the run-rate extrapolates to **{stats["projected_runrate"]:,}**, and a seasonality-adjusted estimate (using {PRIOR_YEAR}'s {stats["h1_share_prior"]:.0f}% first-half share) to **{stats["projected_seasonal"]:,}**.
+At **{stats["cves_per_day"]:.1f} CVEs/day**, two straight-line methods land close to each other (both are simple extrapolations of the same H1 run, so this is a sanity check, not two truly independent signals): the run-rate extrapolates to **{stats["projected_runrate"]:,}**, and a seasonality-adjusted estimate (scaling the pace across the full half, then dividing by {PRIOR_YEAR}'s {stats["h1_share_prior"]:.0f}% first-half share) to **{stats["projected_seasonal"]:,}**.
 
 {forecast_block}
 
@@ -785,6 +807,9 @@ The **average CVSS score for H1 2026 was {stats["avg_cvss"]:.2f}**, with a **med
 | High | {stats["high"]:,} | {sev_pct["high"]:.1f}% |
 | Medium | {stats["medium"]:,} | {sev_pct["medium"]:.1f}% |
 | Low | {stats["low"]:,} | {sev_pct["low"]:.1f}% |
+| Unscored | {sev_unscored:,} | {sev_pct["unscored"]:.1f}% |
+
+Percentages are of all H1 2026 CVEs; "Unscored" are the {sev_pct["unscored"]:.1f}% with no CVSS severity assigned.
 
 ![Severity Breakdown](graphs/06_severity_breakdown.png)
 
@@ -815,7 +840,7 @@ The Common Weakness Enumeration (CWE) categorizes the types of security weakness
 
 ## CVE Numbering Authorities (CNAs)
 
-The CNA mix keeps tilting toward platform security teams and third-party aggregators rather than the original product vendors. The most active assigners this year:
+The leaderboard increasingly reflects where modern software and modern vulnerability research live: platform and ecosystem CNAs (GitHub, Patchstack) and dedicated research CNAs (VulnCheck, VulDB) alongside the traditional product vendors. High assignment counts are not inflation, a CNA covering the WordPress plugin ecosystem or issuing a CVE per kernel fix is doing exactly its job; the low KEV overlap below reflects how rare confirmed exploitation is across all sources, not the validity of any CNA's records. The most active assigners this year:
 
 ![Top CNAs](graphs/08_top_cnas.png)
 
@@ -826,7 +851,7 @@ The CNA mix keeps tilting toward platform security teams and third-party aggrega
 """
 
     for i, (cna, count) in enumerate(top_cnas, 1):
-        blog += f"| {i} | {cna} | {count:,} |\n"
+        blog += f"| {i} | {cna_display(cna)} | {count:,} |\n"
 
     if "unique_cnas" in stats:
         blog += f"\nIn total, **{stats['unique_cnas']} unique CNAs** assigned CVEs in H1 2026.\n"
@@ -867,6 +892,11 @@ Drilling past vendors to specific products, the H1 2026 leaders:
 """
         for i, (product, count) in enumerate(top_products[:5], 1):
             blog += f"| {i} | {pretty(product)} | {count:,} |\n"
+        blog += (
+            "\nProduct-level counts can differ slightly from the vendor totals above: "
+            "a vendor's CVEs may span several products, and a single CVE can name more "
+            "than one.\n"
+        )
 
     # Known-Exploited Vulnerabilities (CISA KEV)
     if kev.get("h1_published_in_kev") is not None:
@@ -885,19 +915,22 @@ Drilling past vendors to specific products, the H1 2026 leaders:
 
 ## Known-Exploited Vulnerabilities (CISA KEV)
 
-Volume is the headline, but exploitation is what should actually drive patching. Of the **{kev.get("h1_published_total", 0):,}** CVEs published in H1 2026, only **{in_kev}** ({pct:.2f}%) have shown up in the [CISA KEV catalog]({kev.get("url")}) so far. That gap is the prioritization signal: the overwhelming majority of CVEs are not known to be exploited, so triaging on exploitability beats chasing raw counts.
+Volume is the headline, but exploitation is what should actually drive patching. Of the **{kev.get("h1_published_total", 0):,}** CVEs published in H1 2026, only **{in_kev}** ({pct:.2f}%) have shown up in the [CISA KEV catalog]({kev.get("url")}) so far. Treat that as a floor, not a verdict: KEV is a US-government catalog that lags disclosure by months and records only confirmed, observed exploitation, so this share will climb as the 2026 cohort ages. Even so, the signal holds, most CVEs are not known-exploited, so exploitability (KEV plus a forward-looking score like EPSS) beats chasing raw counts.
 
-CISA added **{added}** entries to KEV during the first half ({added_dir} the **{added_prior}** added in the same window of {PRIOR_YEAR}), and **{kev.get("ransomware_h1", 0)}** of those are tied to known ransomware campaigns.
+Note these are two different populations: the **{in_kev}** above are H1-2026-*published* CVEs already in KEV, while CISA *added* **{added}** entries to KEV during the half ({added_dir} the **{added_prior}** added in the same window of {PRIOR_YEAR}, many of them older CVEs newly exploited), and **{kev.get("ransomware_h1", 0)}** of those additions are tied to known ransomware campaigns.
 """
         ex_rows = ""
         for e in kev.get("examples", [])[:5]:
             ex_rows += (
                 f"| {e['cve']} | {pretty(e.get('vendor') or '')} | {e.get('product') or ''} | "
-                f"{e.get('date_added') or ''} | {'Yes' if e.get('ransomware') else ''} |\n"
+                f"{e.get('date_added') or ''} | {'Yes' if e.get('ransomware') else 'No'} |\n"
             )
         if ex_rows:
+            _shown = min(5, in_kev)
             blog += f"""
 ### H1 2026 CVEs Already in KEV
+
+A sample (first {_shown} of {in_kev}, earliest additions first):
 
 | CVE | Vendor | Product | Added | Ransomware |
 |-----|--------|---------|-------|------------|
@@ -958,31 +991,37 @@ CVE rejections occur for several reasons:
         total_pub = max(kev.get("h1_published_total", 0), 1)
         kev_pct = kev["h1_published_in_kev"] / total_pub * 100
         kev_takeaway = (
-            f"\n\n6. **Exploitation stays rare**: just {kev['h1_published_in_kev']} of "
-            f"{kev.get('h1_published_total', 0):,} H1 CVEs ({kev_pct:.2f}%) are in CISA KEV. "
-            f"Volume is a triage problem, not a patch-everything problem."
+            f"\n\n6. **Confirmed exploitation stays rare (so far)**: just {kev['h1_published_in_kev']} of "
+            f"{kev.get('h1_published_total', 0):,} H1 CVEs ({kev_pct:.2f}%) are in CISA KEV today, a floor "
+            f"that rises as the cohort ages. Volume is a triage problem, not a patch-everything problem."
         )
 
     # Role-based "what this means" + a forward-looking prediction.
     if kev.get("h1_published_in_kev") is not None:
         _kpct = kev["h1_published_in_kev"] / max(stats["total_2025"], 1) * 100
         defender_line = (
-            f"- **If you defend a network:** ignore the headline count. With only **{_kpct:.2f}%** of "
-            f"H1 CVEs known-exploited, exploitability is your filter, not volume. Wire CISA KEV and "
-            f"EPSS into triage and let the long tail wait."
+            f"- **If you defend a network:** do not let the raw count set your pace. Only **{_kpct:.2f}%** of "
+            f"H1 CVEs are confirmed-exploited in KEV today, but KEV lags and is a floor, not the full risk "
+            f"picture. Lead with exploitability (KEV as a hard floor, EPSS with a threshold you pick), then "
+            f"weight by your own context: internet-facing and sensitive systems jump the queue regardless of "
+            f"score, and compliance SLAs (PCI, FedRAMP, and the like) still set hard clocks. Lower priority is "
+            f"not never, so park the rest in a managed cycle rather than ignoring it."
         )
     else:
         defender_line = (
-            "- **If you defend a network:** triage on exploitability, not raw counts. Wire CISA KEV "
-            "and EPSS into your pipeline."
+            "- **If you defend a network:** lead triage with exploitability (KEV as a floor, EPSS with a "
+            "threshold), then weight by asset exposure and compliance SLAs. Lower priority is not never."
         )
     role_section = (
         "### What this means for you\n\n"
         + defender_line
-        + "\n- **If you run a CNA:** the center of gravity has shifted to platforms and aggregators. "
-        "Throughput and data quality, CPE coverage especially, are the differentiators now.\n"
+        + "\n- **If you run a CNA:** the leaderboard now runs through platforms, ecosystems, and research "
+        "CNAs. Volume reflects scope, not padding; the differentiator that is still genuinely uneven is data "
+        "quality, and the biggest gap, CPE coverage, is largely an NVD-side enrichment problem rather than a "
+        "function of who assigned the CVE.\n"
         + f"- **If you consume NVD data:** enrichment is the bottleneck. CPE at {stats['cpe_coverage']:.1f}% "
-        "means nearly half of new CVEs cannot be auto-matched to a product, and volume only widens that gap.\n"
+        "means nearly half of new CVEs lack a formal CPE, which complicates NVD-style automated matching "
+        "(many CNAs still carry vendor/product strings), and volume only widens that gap.\n"
     )
     if forecast and forecast.get("full_year_forecast"):
         watching = (

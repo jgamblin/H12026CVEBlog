@@ -198,6 +198,8 @@ NAME_ALIASES = {
     'phpgurukul': 'PHPGurukul',
     'mongodb': 'MongoDB',
     'postgresql': 'PostgreSQL',
+    'oracle corporation': 'Oracle',
+    'oracle_corporation': 'Oracle',
 }
 
 
