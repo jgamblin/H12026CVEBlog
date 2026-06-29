@@ -12,6 +12,7 @@ this script is optional but recommended before publishing.
 """
 
 import json
+import time
 from pathlib import Path
 
 import requests
@@ -28,18 +29,25 @@ SITE_URL = "https://www.cveforecast.org"
 TARGET_YEAR = "2026"
 
 
-def fetch_data():
-    """Return the parsed CVEForecast data.json, trying each URL in turn."""
+def fetch_data(retries=3):
+    """Return the parsed CVEForecast data.json, trying each URL in turn.
+
+    Each source is retried with backoff before falling through to the next, so
+    a transient blip on run day does not drop the forecast scorecard.
+    """
     last_err = None
     for url in DATA_URLS:
-        try:
-            print(f"Fetching forecast data from {url} ...")
-            resp = requests.get(url, timeout=30)
-            resp.raise_for_status()
-            return resp.json()
-        except Exception as e:  # noqa: BLE001 - report and try the next source
-            print(f"  could not fetch {url}: {e}")
-            last_err = e
+        for attempt in range(1, retries + 1):
+            try:
+                print(f"Fetching forecast data from {url} (attempt {attempt}/{retries}) ...")
+                resp = requests.get(url, timeout=30)
+                resp.raise_for_status()
+                return resp.json()
+            except Exception as e:  # noqa: BLE001 - report, back off, then retry/fall through
+                print(f"  could not fetch {url}: {e}")
+                last_err = e
+                if attempt < retries:
+                    time.sleep(3 * attempt)
     raise SystemExit(f"Unable to fetch CVEForecast data: {last_err}")
 
 
@@ -48,6 +56,11 @@ def normalize(data):
     totals = data.get("yearly_forecast_totals", {}).get(TARGET_YEAR, {})
     # The ensemble ("all_models") is the headline full-year projection.
     full_year = totals.get("all_models")
+    if full_year is None:
+        print(
+            f"  WARNING: no ensemble ('all_models') forecast for {TARGET_YEAR}; "
+            "the blog will render its forecast placeholder."
+        )
 
     rankings = data.get("model_rankings", [])
     best = rankings[0] if rankings else {}
@@ -79,11 +92,14 @@ def main():
     with open(out, "w") as f:
         json.dump(forecast, f, indent=2)
 
+    def _fmt(v):
+        return f"{v:,}" if isinstance(v, (int, float)) else "unavailable"
+
     print(f"\n✓ Wrote {out}")
-    print(f"  Full-year 2026 forecast (ensemble): {forecast['full_year_forecast']:,}")
+    print(f"  Full-year 2026 forecast (ensemble): {_fmt(forecast['full_year_forecast'])}")
     print(f"  Best model: {forecast['model']} (MAPE {forecast['model_mape']})")
-    print(f"  Prior full year (2025): {forecast['prior_year_total']:,}")
-    print(f"  H1 2026 actual (cumulative): {forecast['cumulative_actual_2026']:,}")
+    print(f"  Prior full year (2025): {_fmt(forecast['prior_year_total'])}")
+    print(f"  H1 2026 actual (cumulative): {_fmt(forecast['cumulative_actual_2026'])}")
     print("\nThe blog step (04_generate_blog.py) will pick this up automatically.")
 
 

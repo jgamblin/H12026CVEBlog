@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Download CVE Data Sources for 2025 CVE Review
+Download CVE Data Sources for the 2026 First Half CVE Review
 1. NVD JSON from handsonhacking.org (large file ~1GB+)
 2. CVE V5 List from GitHub
 """
@@ -8,6 +8,7 @@ Download CVE Data Sources for 2025 CVE Review
 import requests
 from pathlib import Path
 import subprocess
+import time
 from tqdm import tqdm
 
 # Create data directory
@@ -72,21 +73,45 @@ def download_nvd_json(force=False):
     print(f"Downloading NVD JSON from {url}...")
     print("This is a large file (~1GB+), please be patient...")
 
-    # Stream the download with progress bar
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
+    # Download to a temp file, verify it is complete, then atomically replace
+    # the good copy. Retry on transient network failures with backoff so a
+    # flaky connection on run day does not leave a truncated nvd.json behind.
+    tmp_file = output_file.with_name(output_file.name + ".part")
+    last_err = None
+    for attempt in range(1, 4):
+        try:
+            # (connect timeout, read timeout) - the body streams for a while.
+            response = requests.get(url, stream=True, timeout=(30, 300))
+            response.raise_for_status()
 
-    total_size = int(response.headers.get('content-length', 0))
+            total_size = int(response.headers.get('content-length', 0))
 
-    with open(output_file, 'wb') as f:
-        with tqdm(total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as pbar:
-            for chunk in response.iter_content(chunk_size=8192):
-                size = f.write(chunk)
-                pbar.update(size)
+            with open(tmp_file, 'wb') as f:
+                with tqdm(total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as pbar:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        size = f.write(chunk)
+                        pbar.update(size)
 
-    print(f"Downloaded NVD JSON to {output_file}")
-    print(f"File size: {output_file.stat().st_size / (1024**3):.2f} GB")
-    return output_file
+            # Guard against a silently truncated download before clobbering the
+            # previous good file.
+            got = tmp_file.stat().st_size
+            if total_size and got < total_size:
+                raise IOError(f"Incomplete download: got {got:,} of {total_size:,} bytes")
+
+            tmp_file.replace(output_file)
+            print(f"Downloaded NVD JSON to {output_file}")
+            print(f"File size: {output_file.stat().st_size / (1024**3):.2f} GB")
+            return output_file
+        except Exception as e:  # noqa: BLE001 - report, back off, and retry
+            last_err = e
+            print(f"  download attempt {attempt}/3 failed: {e}")
+            if attempt < 3:
+                wait = 5 * attempt
+                print(f"  retrying in {wait}s ...")
+                time.sleep(wait)
+
+    tmp_file.unlink(missing_ok=True)
+    raise RuntimeError(f"Failed to download NVD JSON after 3 attempts: {last_err}")
 
 def clone_cvelistv5():
     """Clone the CVE V5 list repository"""
@@ -96,7 +121,17 @@ def clone_cvelistv5():
     if output_dir.exists():
         print(f"CVE List V5 repository already exists at {output_dir}")
         print("Pulling latest changes...")
-        subprocess.run(["git", "-C", str(output_dir), "pull"], check=True)
+        # The initial clone is shallow (--depth 1). A plain `git pull` into a
+        # shallow repo can fail or fetch incompletely, which would silently drop
+        # CVEs on the post-July-1 re-run. Convert to full history first (a no-op
+        # if already complete), then fast-forward.
+        subprocess.run(
+            ["git", "-C", str(output_dir), "fetch", "--unshallow"],
+            check=False,
+        )
+        subprocess.run(
+            ["git", "-C", str(output_dir), "pull", "--ff-only"], check=True
+        )
         return output_dir
 
     print(f"Cloning CVE List V5 from {repo_url}...")
@@ -126,13 +161,26 @@ def verify_data():
         size_gb = nvd_file.stat().st_size / (1024**3)
         print(f"✓ NVD JSON: {size_gb:.2f} GB")
 
-        # Quick validation - read first few bytes
+        # Quick validation - confirm the file both opens and closes like JSON.
+        # Checking only the first byte misses a download truncated mid-stream
+        # (which still "looks" like JSON until you reach the cut-off end).
         with open(nvd_file, 'r') as f:
             first_char = f.read(1)
-            if first_char in ['{', '[']:
-                print("  ✓ Valid JSON structure detected")
-            else:
-                print("  ✗ Warning: May not be valid JSON")
+        last_char = ""
+        try:
+            with open(nvd_file, 'rb') as f:
+                f.seek(-64, 2)
+                tail = f.read().strip()
+            last_char = chr(tail[-1]) if tail else ""
+        except OSError:
+            pass
+        if first_char in ['{', '['] and last_char in ['}', ']']:
+            print("  ✓ Valid JSON structure detected (open and close match)")
+        else:
+            print(
+                f"  ✗ Warning: JSON may be incomplete "
+                f"(starts '{first_char}', ends '{last_char}')"
+            )
     else:
         print("✗ NVD JSON not found")
 
@@ -151,7 +199,7 @@ def main():
     args = parser.parse_args()
 
     print("="*50)
-    print("2025 CVE Data Download Script")
+    print("2026 First Half CVE Data Download Script")
     print("="*50)
 
     # Download NVD JSON
