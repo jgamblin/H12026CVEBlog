@@ -82,18 +82,18 @@ def load_data():
         cvelist_df = cvelist_df[~cvelist_df["is_rejected"]]
         print(f"  Filtered out {rejected:,} rejected CVEs from CVE List V5")
 
-    # STRICT 2025 CUTOFF: Exclude any data from 2026+
+    # STRICT CUTOFF: exclude any data published after the target year.
     if nvd_df is not None and "year" in nvd_df.columns:
-        future_count = (nvd_df["year"] > 2026).sum()
+        future_count = (nvd_df["year"] > TARGET_YEAR).sum()
         if future_count > 0:
-            print(f"  Excluding {future_count:,} CVEs from 2026+ (NVD)")
-            nvd_df = nvd_df[nvd_df["year"] <= 2026]
+            print(f"  Excluding {future_count:,} CVEs from after {TARGET_YEAR} (NVD)")
+            nvd_df = nvd_df[nvd_df["year"] <= TARGET_YEAR]
 
     if cvelist_df is not None and "year" in cvelist_df.columns:
-        future_count = (cvelist_df["year"] > 2026).sum()
+        future_count = (cvelist_df["year"] > TARGET_YEAR).sum()
         if future_count > 0:
-            print(f"  Excluding {future_count:,} CVEs from 2026+ (CVE List V5)")
-            cvelist_df = cvelist_df[cvelist_df["year"] <= 2026]
+            print(f"  Excluding {future_count:,} CVEs from after {TARGET_YEAR} (CVE List V5)")
+            cvelist_df = cvelist_df[cvelist_df["year"] <= TARGET_YEAR]
 
     return nvd_df, cvelist_df
 
@@ -118,12 +118,12 @@ def load_data_with_rejected():
             parse_dates=["date_reserved", "date_published"],
         )
 
-    # STRICT 2025 CUTOFF: Exclude any data from 2026+
+    # STRICT CUTOFF: exclude any data published after the target year.
     if nvd_df is not None and "year" in nvd_df.columns:
-        nvd_df = nvd_df[nvd_df["year"] <= 2026]
+        nvd_df = nvd_df[nvd_df["year"] <= TARGET_YEAR]
 
     if cvelist_df is not None and "year" in cvelist_df.columns:
-        cvelist_df = cvelist_df[cvelist_df["year"] <= 2026]
+        cvelist_df = cvelist_df[cvelist_df["year"] <= TARGET_YEAR]
 
     return nvd_df, cvelist_df
 
@@ -131,7 +131,7 @@ def load_data_with_rejected():
 def normalize_data(df):
     """
     Normalize and clean CVE data for accurate analysis.
-    - Strict 2025 cutoff
+    - Strict target-year cutoff
     - Product name normalization (for product/vendor columns only)
     - Version stripping
     - Deduplication by CVE ID
@@ -144,9 +144,9 @@ def normalize_data(df):
     df = df.copy()
     original_len = len(df)
 
-    # 1. STRICT 2025 CUTOFF
+    # 1. STRICT CUTOFF: exclude any data published after the target year.
     if "year" in df.columns:
-        df = df[df["year"] <= 2026]
+        df = df[df["year"] <= TARGET_YEAR]
 
     # 2. PRODUCT NAME NORMALIZATION (only for rows with valid products)
     product_mapping = {
@@ -901,8 +901,8 @@ def graph_rejected_cves(df, save_path=None):
         save_figure(fig, save_path)
 
     rejected_stats = {
-        "rejected_2025": rejected_recent.get(2026, 0),
-        "rate_2025": rejection_rate.get(2026, 0),
+        "rejected_2025": rejected_recent.get(TARGET_YEAR, 0),
+        "rate_2025": rejection_rate.get(TARGET_YEAR, 0),
         "total_rejected": rejected.sum(),
     }
 
@@ -973,7 +973,7 @@ def graph_cve_id_ranges(df, save_path=None):
 
     df_2025 = df[period_mask(df)].copy()
     df_2025["cve_num"] = (
-        df_2025["cve_id"].str.extract(r"CVE-2026-(\d+)")[0].astype(float)
+        df_2025["cve_id"].str.extract(rf"CVE-{TARGET_YEAR}-(\d+)")[0].astype(float)
     )
     df_2025 = df_2025[df_2025["cve_num"].notna()]
 
@@ -987,13 +987,13 @@ def graph_cve_id_ranges(df, save_path=None):
         alpha=0.85,
     )
 
-    ax.set_xlabel("CVE ID Number (CVE-2026-XXXXX)")
+    ax.set_xlabel(f"CVE ID Number (CVE-{TARGET_YEAR}-XXXXX)")
     ax.set_ylabel("Count")
     ax.set_title(f"Distribution of {PERIOD_LABEL} CVE ID Numbers")
 
     # Add statistics
     max_num = df_2025["cve_num"].max()
-    textstr = f"Max ID: CVE-2026-{int(max_num)}\nTotal: {len(df_2025):,}"
+    textstr = f"Max ID: CVE-{TARGET_YEAR}-{int(max_num)}\nTotal: {len(df_2025):,}"
     ax.text(
         0.98,
         0.98,
@@ -1469,58 +1469,73 @@ def generate_summary_stats(nvd_df, cvelist_df):
     """Generate summary statistics for the blog. Returns stats dict."""
     print("\nGenerating summary statistics...")
 
-    stats = {}
+    # NOTE: this is a standalone diagnostic artifact (graphs/summary_stats.json);
+    # the published blog computes its own numbers in 04_generate_blog.py. The
+    # prior-period figure here uses the FULL prior first half (Jan 1 - Jun 30),
+    # whereas the blog's headline year-over-year uses the same *elapsed* window
+    # (Jan 1 through the current as-of date). The two will differ until the
+    # window closes on Jun 30 - that is expected, not a bug. Keys are named by
+    # role (current/prior), never by a hard-coded year.
+    stats = {
+        "_meta": {
+            "period_label": PERIOD_LABEL,
+            "current_period": "Jan 1 - Jun 30 of the target year (publish date)",
+            "prior_period": "full Jan 1 - Jun 30 of the prior year",
+            "note": (
+                "Diagnostic only; not consumed by the blog. Blog YoY uses the "
+                "same-elapsed window and may differ while the period is open."
+            ),
+        }
+    }
 
     if nvd_df is not None:
-        nvd_2025 = nvd_df[period_mask(nvd_df)]
-        nvd_2024 = nvd_df[prior_period_mask(nvd_df)]
+        nvd_cur = nvd_df[period_mask(nvd_df)]
+        nvd_prior = nvd_df[prior_period_mask(nvd_df)]
 
         stats["nvd"] = {
             "total_all_time": len(nvd_df),
-            "total_2025": len(nvd_2025),
-            "total_2024": len(nvd_2024),
-            "yoy_change": ((len(nvd_2025) - len(nvd_2024)) / len(nvd_2024) * 100)
-            if len(nvd_2024) > 0
+            "total_current_period": len(nvd_cur),
+            "total_prior_period_full_h1": len(nvd_prior),
+            "yoy_change_full_h1": ((len(nvd_cur) - len(nvd_prior)) / len(nvd_prior) * 100)
+            if len(nvd_prior) > 0
             else 0,
-            "cvss_v3_coverage_2025": (
-                nvd_2025["cvss_v3"].notna().sum() / len(nvd_2025) * 100
+            "cvss_v3_coverage": (
+                nvd_cur["cvss_v3"].notna().sum() / len(nvd_cur) * 100
             )
-            if len(nvd_2025) > 0
+            if len(nvd_cur) > 0
             else 0,
-            "cwe_coverage_2025": (nvd_2025["cwe"].notna().sum() / len(nvd_2025) * 100)
-            if len(nvd_2025) > 0
+            "cwe_coverage": (nvd_cur["cwe"].notna().sum() / len(nvd_cur) * 100)
+            if len(nvd_cur) > 0
             else 0,
-            "avg_cvss_2025": nvd_2025["cvss_v3"].mean() if len(nvd_2025) > 0 else 0,
-            "critical_2025": len(
-                nvd_2025[nvd_2025["severity"].str.upper() == "CRITICAL"]
-            )
-            if "severity" in nvd_2025.columns
+            "avg_cvss": nvd_cur["cvss_v3"].mean() if len(nvd_cur) > 0 else 0,
+            "critical": len(nvd_cur[nvd_cur["severity"].str.upper() == "CRITICAL"])
+            if "severity" in nvd_cur.columns
             else 0,
-            "high_2025": len(nvd_2025[nvd_2025["severity"].str.upper() == "HIGH"])
-            if "severity" in nvd_2025.columns
+            "high": len(nvd_cur[nvd_cur["severity"].str.upper() == "HIGH"])
+            if "severity" in nvd_cur.columns
             else 0,
         }
 
     if cvelist_df is not None:
-        cv_2025 = cvelist_df[period_mask(cvelist_df)]
+        cv_cur = cvelist_df[period_mask(cvelist_df)]
 
         stats["cvelist"] = {
             "total_all_time": len(cvelist_df),
-            "total_2025": len(cv_2025),
-            "published_2025": cv_2025["is_published"].sum()
-            if "is_published" in cv_2025.columns
+            "total_current_period": len(cv_cur),
+            "published": cv_cur["is_published"].sum()
+            if "is_published" in cv_cur.columns
             else 0,
-            "rejected_2025": cv_2025["is_rejected"].sum()
-            if "is_rejected" in cv_2025.columns
+            "rejected": cv_cur["is_rejected"].sum()
+            if "is_rejected" in cv_cur.columns
             else 0,
-            "unique_cnas_2025": cv_2025["assigner_short_name"].nunique()
-            if "assigner_short_name" in cv_2025.columns
+            "unique_cnas": cv_cur["assigner_short_name"].nunique()
+            if "assigner_short_name" in cv_cur.columns
             else 0,
-            "unique_vendors_2025": cv_2025["vendor"].nunique()
-            if "vendor" in cv_2025.columns
+            "unique_vendors": cv_cur["vendor"].nunique()
+            if "vendor" in cv_cur.columns
             else 0,
-            "top_cna": cv_2025["assigner_short_name"].value_counts().index[0]
-            if "assigner_short_name" in cv_2025.columns and len(cv_2025) > 0
+            "top_cna": cv_cur["assigner_short_name"].value_counts().index[0]
+            if "assigner_short_name" in cv_cur.columns and len(cv_cur) > 0
             else "N/A",
         }
 
@@ -1532,29 +1547,29 @@ def generate_summary_stats(nvd_df, cvelist_df):
 
     # Print summary
     print("\n" + "=" * 60)
-    print("2026 FIRST HALF CVE REVIEW SUMMARY STATISTICS")
+    print(f"{PERIOD_LABEL} CVE REVIEW SUMMARY STATISTICS (diagnostic)")
     print("=" * 60)
 
     if "nvd" in stats:
         print("\nNVD Data:")
         print(f"  Total CVEs (all time): {stats['nvd']['total_all_time']:,}")
-        print(f"  2025 CVEs: {stats['nvd']['total_2025']:,}")
-        print(f"  2024 CVEs: {stats['nvd']['total_2024']:,}")
-        print(f"  Year-over-Year Change: {stats['nvd']['yoy_change']:+.1f}%")
-        print(f"  CVSS Coverage (2025): {stats['nvd']['cvss_v3_coverage_2025']:.1f}%")
-        print(f"  CWE Coverage (2025): {stats['nvd']['cwe_coverage_2025']:.1f}%")
-        print(f"  Average CVSS (2025): {stats['nvd']['avg_cvss_2025']:.2f}")
-        print(f"  Critical Severity (2025): {stats['nvd']['critical_2025']:,}")
-        print(f"  High Severity (2025): {stats['nvd']['high_2025']:,}")
+        print(f"  Current period CVEs: {stats['nvd']['total_current_period']:,}")
+        print(f"  Prior full H1 CVEs: {stats['nvd']['total_prior_period_full_h1']:,}")
+        print(f"  YoY Change (full H1): {stats['nvd']['yoy_change_full_h1']:+.1f}%")
+        print(f"  CVSS Coverage: {stats['nvd']['cvss_v3_coverage']:.1f}%")
+        print(f"  CWE Coverage: {stats['nvd']['cwe_coverage']:.1f}%")
+        print(f"  Average CVSS: {stats['nvd']['avg_cvss']:.2f}")
+        print(f"  Critical Severity: {stats['nvd']['critical']:,}")
+        print(f"  High Severity: {stats['nvd']['high']:,}")
 
     if "cvelist" in stats:
         print("\nCVE List V5 Data:")
         print(f"  Total CVEs (all time): {stats['cvelist']['total_all_time']:,}")
-        print(f"  2025 CVEs: {stats['cvelist']['total_2025']:,}")
-        print(f"  Published (2025): {stats['cvelist']['published_2025']:,}")
-        print(f"  Rejected (2025): {stats['cvelist']['rejected_2025']:,}")
-        print(f"  Unique CNAs (2025): {stats['cvelist']['unique_cnas_2025']:,}")
-        print(f"  Unique Vendors (2025): {stats['cvelist']['unique_vendors_2025']:,}")
+        print(f"  Current period CVEs: {stats['cvelist']['total_current_period']:,}")
+        print(f"  Published: {stats['cvelist']['published']:,}")
+        print(f"  Rejected: {stats['cvelist']['rejected']:,}")
+        print(f"  Unique CNAs: {stats['cvelist']['unique_cnas']:,}")
+        print(f"  Unique Vendors: {stats['cvelist']['unique_vendors']:,}")
         print(f"  Top CNA: {stats['cvelist']['top_cna']}")
 
     return stats

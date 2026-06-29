@@ -112,29 +112,30 @@ def load_data():
         print(f"  → Filtering out {rejected_count:,} rejected CVEs from CVE List V5")
         cvelist_df = cvelist_df[~cvelist_df["is_rejected"]].copy()
 
-    # STRICT 2025 CUTOFF: Exclude any data from 2026+
+    # STRICT CUTOFF: exclude any data published after the target year so a
+    # re-run on a later date never pulls future-dated CVEs into the totals.
     if nvd_df is not None and "year" in nvd_df.columns:
-        future_count = (nvd_df["year"] > 2026).sum()
+        future_count = (nvd_df["year"] > TARGET_YEAR).sum()
         if future_count > 0:
             print(
-                f"  → Excluding {future_count:,} CVEs from 2026+ (strict 2025 cutoff)"
+                f"  → Excluding {future_count:,} CVEs from after {TARGET_YEAR} (strict cutoff)"
             )
-            nvd_df = nvd_df[nvd_df["year"] <= 2026].copy()
+            nvd_df = nvd_df[nvd_df["year"] <= TARGET_YEAR].copy()
 
     if cvelist_df is not None and "year" in cvelist_df.columns:
-        future_count = (cvelist_df["year"] > 2026).sum()
+        future_count = (cvelist_df["year"] > TARGET_YEAR).sum()
         if future_count > 0:
             print(
-                f"  → Excluding {future_count:,} CVEs from 2026+ (strict 2025 cutoff)"
+                f"  → Excluding {future_count:,} CVEs from after {TARGET_YEAR} (strict cutoff)"
             )
-            cvelist_df = cvelist_df[cvelist_df["year"] <= 2026].copy()
+            cvelist_df = cvelist_df[cvelist_df["year"] <= TARGET_YEAR].copy()
 
     # Also apply cutoff to full datasets used for rejection analysis
     if full_nvd_df is not None and "year" in full_nvd_df.columns:
-        full_nvd_df = full_nvd_df[full_nvd_df["year"] <= 2026].copy()
+        full_nvd_df = full_nvd_df[full_nvd_df["year"] <= TARGET_YEAR].copy()
 
     if full_cvelist_df is not None and "year" in full_cvelist_df.columns:
-        full_cvelist_df = full_cvelist_df[full_cvelist_df["year"] <= 2026].copy()
+        full_cvelist_df = full_cvelist_df[full_cvelist_df["year"] <= TARGET_YEAR].copy()
 
     # Return both filtered (active) and full datasets
     return nvd_df, cvelist_df, full_nvd_df, full_cvelist_df
@@ -399,7 +400,9 @@ def calculate_stats(df, cvelist_df, full_nvd_df=None, full_cvelist_df=None):
 
     # Yearly data
     yearly = df.groupby("year").size().reset_index(name="count")
-    yearly = yearly[(yearly["year"] >= 1999) & (yearly["year"] <= 2026)]
+    yearly = yearly[
+        (yearly["year"] >= HIST_MIN_YEAR) & (yearly["year"] <= TARGET_YEAR)
+    ]
     stats["yearly"] = yearly
 
     # CVE List V5 specific stats
@@ -522,6 +525,14 @@ def generate_blog(
         )
     else:
         exploit_line = ""
+
+    # Severity percentages, guarded against an empty current period so a
+    # bad/partial data load degrades to 0% instead of a ZeroDivisionError.
+    _tot = max(stats["total_2025"], 1)
+    sev_pct = {
+        k: stats[k] / _tot * 100 for k in ("critical", "high", "medium", "low")
+    }
+    crit_high_pct = (stats["critical"] + stats["high"]) / _tot * 100
 
     blog = f"""# {PERIOD_TITLE} CVE Data Review
 
@@ -770,10 +781,10 @@ The **average CVSS score for H1 2026 was {stats["avg_cvss"]:.2f}**, with a **med
 
 | Severity | Count | Percentage |
 |----------|-------|------------|
-| Critical | {stats["critical"]:,} | {stats["critical"] / stats["total_2025"] * 100:.1f}% |
-| High | {stats["high"]:,} | {stats["high"] / stats["total_2025"] * 100:.1f}% |
-| Medium | {stats["medium"]:,} | {stats["medium"] / stats["total_2025"] * 100:.1f}% |
-| Low | {stats["low"]:,} | {stats["low"] / stats["total_2025"] * 100:.1f}% |
+| Critical | {stats["critical"]:,} | {sev_pct["critical"]:.1f}% |
+| High | {stats["high"]:,} | {sev_pct["high"]:.1f}% |
+| Medium | {stats["medium"]:,} | {sev_pct["medium"]:.1f}% |
+| Low | {stats["low"]:,} | {sev_pct["low"]:.1f}% |
 
 ![Severity Breakdown](graphs/06_severity_breakdown.png)
 
@@ -994,7 +1005,7 @@ CVE rejections occur for several reasons:
 
 1. **Volume keeps climbing**: {stats["total_2025"]:,} CVEs in roughly six months, {"up" if stats["yoy_change"] > 0 else "down"} {abs(stats["yoy_change"]):.1f}% on the same window last year, with the full year projecting to {proj_lo:,}-{proj_hi:,}.
 
-2. **Severity stays heavy**: {stats["critical"] + stats["high"]:,} CVEs ({(stats["critical"] + stats["high"]) / stats["total_2025"] * 100:.1f}%) are Critical or High.
+2. **Severity stays heavy**: {stats["critical"] + stats["high"]:,} CVEs ({crit_high_pct:.1f}%) are Critical or High.
 
 3. **Web and access-control flaws lead**: {cwe_names_top} headline the CWE list. Memory-safety issues barely register in the top tier this half.
 

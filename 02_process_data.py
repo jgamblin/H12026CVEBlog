@@ -41,6 +41,7 @@ def load_nvd_json():
 def parse_nvd_data(nvd_data):
     """Parse NVD data into a DataFrame"""
     records = []
+    skipped = 0
 
     # Handle different NVD JSON formats
     items = nvd_data.get("CVE_Items", nvd_data.get("vulnerabilities", []))
@@ -207,14 +208,16 @@ def parse_nvd_data(nvd_data):
             else:
                 continue
 
-            # Parse dates
+            # Parse dates as UTC-aware so they match the UTC reporting-window
+            # comparisons in period_config (naive vs aware silently mis-bins
+            # CVEs at the Jun 30 / Jul 1 boundary).
             try:
-                pub_date = pd.to_datetime(published)
+                pub_date = pd.to_datetime(published, utc=True)
             except Exception:
                 pub_date = None
 
             try:
-                mod_date = pd.to_datetime(modified)
+                mod_date = pd.to_datetime(modified, utc=True)
             except Exception:
                 mod_date = None
 
@@ -280,10 +283,14 @@ def parse_nvd_data(nvd_data):
             )
 
         except Exception:
+            skipped += 1
             continue
 
     df = pd.DataFrame(records)
     print(f"Created DataFrame with {len(df):,} CVEs")
+    if skipped:
+        pct = skipped / max(len(items), 1) * 100
+        print(f"  ⚠ Skipped {skipped:,} unparseable NVD entries ({pct:.2f}%)")
     return df
 
 
@@ -364,14 +371,14 @@ def process_single_cve_file(cve_file):
         except Exception:
             cve_year = None
 
-        # Parse dates
+        # Parse dates as UTC-aware to match the reporting-window comparisons.
         try:
-            pub_date = pd.to_datetime(date_published) if date_published else None
+            pub_date = pd.to_datetime(date_published, utc=True) if date_published else None
         except Exception:
             pub_date = None
 
         try:
-            reserved_date = pd.to_datetime(date_reserved) if date_reserved else None
+            reserved_date = pd.to_datetime(date_reserved, utc=True) if date_reserved else None
         except Exception:
             reserved_date = None
 
@@ -430,6 +437,10 @@ def parse_cvelistv5():
 
     # Filter out None results (failed parses)
     records = [r for r in results if r is not None]
+    failed = len(results) - len(records)
+    if failed:
+        pct = failed / max(len(results), 1) * 100
+        print(f"  ⚠ {failed:,} CVE V5 files failed to parse ({pct:.2f}%)")
 
     df = pd.DataFrame(records)
     print(f"Created CVE V5 DataFrame with {len(df):,} CVEs")
