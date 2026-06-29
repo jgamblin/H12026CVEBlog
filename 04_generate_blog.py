@@ -663,7 +663,7 @@ At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and th
         openclaw_spotlight = (
             "\n\n**Spotlight: OpenClaw.** A project that barely existed a year ago, OpenClaw "
             "(Peter Steinberger's viral local AI agent, the subject of "
-            "[Lex Fridman Podcast #491](https://lexfridman.com/peter-steinberger/)) is already one "
+            "[Lex Fridman Podcast #491](https://www.youtube.com/watch?v=YFjfBk8HI5o)) is already one "
             f"of the most-reported products of the half with **{oc['total']:,} CVEs**. The striking "
             f"part is who is doing the reporting: **{oc['top_assigner']} alone assigned "
             f"{oc['top_assigner_count']:,}** of them ({share:.0f}%), disclosed steadily across the "
