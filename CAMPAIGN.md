@@ -2,6 +2,11 @@
 
 > Draft copy uses numbers through Jun 26. **Refresh every figure after the final post-Jul-1 run.**
 > No em dashes (house style). Swap in real handles and the published URL before posting.
+>
+> **`[LINK]` = the published post URL on JerryGamblin.com** (10 occurrences). It does
+> not exist until you publish. Expected format, matching the series permalink pattern:
+> `https://jerrygamblin.com/2026/07/<DD>/2026-first-half-cve-data-review/`. Replace all
+> 10 once live.
 
 ## The thesis (use everywhere)
 
@@ -62,7 +67,7 @@ Launch with the thesis + hero image, then drip one finding per day, each with it
 >
 > 5/ CVEForecast projects 82,878 for the year. My call: we land closer to 72k. The model's gap rests entirely on a second-half surge that still has to show up.
 >
-> 6/ Everything here is reproducible. Data, code, and all 18 charts: [LINK]
+> 6/ Everything here is reproducible. Data, code, and all 16 charts: [LINK]
 > Built on the free tools at @rogolabs: cve.icu, cveforecast.org, cnascorecard.org
 
 ### Mastodon (infosec.exchange; 500 chars, substance over hashtags)
@@ -90,13 +95,13 @@ Launch with the thesis + hero image, then drip one finding per day, each with it
 > GitHub is now the #1 CVE issuer (6,730). VulnCheck came out of nowhere into the top 3. The people assigning CVEs changed in 2026: platforms and aggregators now set the pace, not the original vendors. What that means for data quality 👇 [LINK]
 
 **Day 3 - The OpenClaw story** (chart: 18_top_products.png)
-> A project that barely existed a year ago is now one of the most-reported products of 2026: OpenClaw, the viral local AI agent (Peter Steinberger on Lex Fridman #491). The good part: instead of hiding it, they embraced the CVE lifecycle and started issuing CVEs. Coordinated disclosure under pressure, done right. I track it: github.com/jgamblin/OpenClawCVEs [LINK]
+> A project that barely existed a year ago is already one of the most-reported products of 2026: OpenClaw, the viral local AI agent (Peter Steinberger on Lex Fridman #491). 537 CVEs this half, and ~500 came from VulnCheck alone, disclosed steadily over four months. That is what a research magnet looks like. The project also runs its own coordinated disclosure through GitHub. I track it: github.com/jgamblin/OpenClawCVEs [LINK]
 
 **Day 4 - Forecast scorecard** (chart: 01_cves_by_year.png)
 > Are we on pace? Two straight-line methods say ~72k for 2026. CVEForecast says 82,878. I think the model is high: its gap rests on a second-half surge that hasn't shown up. Planting a flag now, settling it in December. [LINK]
 
 **Day 5 - Patch Tuesday myth + recap** (chart: 16_day_of_week.png)
-> Everyone says Patch Tuesday. The 2026 data says Wednesday (7,943 vs 7,081). The midweek bulge is driven less by Microsoft than by high-volume CNAs batch-publishing. Full mid-year review, all 18 charts: [LINK]
+> Everyone says Patch Tuesday. The 2026 data says Wednesday (7,943 vs 7,081). The midweek bulge is driven less by Microsoft than by high-volume CNAs batch-publishing. Full mid-year review, all 16 charts: [LINK]
 
 ---
 
