@@ -9,12 +9,22 @@ import re
 import time
 from pathlib import Path
 
-try:
-    import google.generativeai as genai
-except ImportError:
-    print("ERROR: google-generativeai not installed.")
-    print("Install with: pip install google-generativeai")
-    exit(1)
+
+def _import_genai():
+    """Lazily import the optional Gemini SDK.
+
+    Kept out of module scope so the pure helpers in this file (e.g.
+    extract_numbers) can be imported and tested without the optional
+    google-generativeai dependency installed.
+    """
+    try:
+        import google.generativeai as genai
+
+        return genai
+    except ImportError:
+        print("ERROR: google-generativeai not installed.")
+        print("Install with: pip install google-generativeai")
+        return None
 
 # Configuration
 INPUT_FILE = Path("blog.md")
@@ -39,6 +49,25 @@ def get_api_key():
         return None
 
     return api_key
+
+
+def extract_numbers(text):
+    """Return the set of numeric values appearing in ``text``.
+
+    Captures integers (with or without thousands separators) and decimals, then
+    normalizes by stripping commas and comparing as floats. The previous regex
+    only matched comma-grouped numbers, so a plain integer like ``6730`` or a
+    reformatted ``6,730`` -> ``6730`` slipped through the preservation check.
+    """
+    nums = set()
+    for tok in re.findall(r"\d[\d,]*(?:\.\d+)?", text):
+        tok = tok.rstrip(".").replace(",", "")
+        if tok:
+            try:
+                nums.add(float(tok))
+            except ValueError:
+                continue
+    return nums
 
 
 def extract_sections(markdown_text):
@@ -180,25 +209,32 @@ def enhance_section_with_gemini(model, section):
 
             enhanced = response.text.strip()
 
-            # Validation: ensure key statistics are preserved
-            # Extract all numbers from original and enhanced
-            original_numbers = set(
-                re.findall(r"\d{1,3}(?:,\d{3})*(?:\.\d+)?", section["content"])
-            )
-            enhanced_numbers = set(
-                re.findall(r"\d{1,3}(?:,\d{3})*(?:\.\d+)?", enhanced)
-            )
+            # Validation: ensure key statistics are preserved. Compare numeric
+            # VALUES (not regex tokens) so a dropped or altered figure is caught
+            # even when it has no thousands separator.
+            original_numbers = extract_numbers(section["content"])
+            enhanced_numbers = extract_numbers(enhanced)
 
-            # Check if we lost any significant numbers
+            # Numbers present in the original but missing from the rewrite.
             lost_numbers = original_numbers - enhanced_numbers
+            # A lost value is a real statistic (not an incidental date part or
+            # list index) if it is large or carries a decimal/percentage.
+            significant_lost = {
+                n for n in lost_numbers if n >= 100 or n != int(n)
+            }
             if lost_numbers:
-                print(
-                    f"    ⚠ Warning: Some numbers may have changed in '{section['title']}'"
+                preview = ", ".join(
+                    f"{n:g}" for n in sorted(lost_numbers)[:6]
                 )
-                # Fall back to original if significant data loss detected
-                if len(lost_numbers) > 3:
-                    print("    ↳ Reverting to original (too many number changes)")
-                    return section["content"]
+                print(
+                    f"    ⚠ Warning: {len(lost_numbers)} number(s) changed/dropped in "
+                    f"'{section['title']}': {preview}"
+                )
+            if significant_lost:
+                # Dropping a real statistic in a data post is a credibility
+                # risk, so revert to the exact original rather than ship drift.
+                print("    ↳ Reverting to original (a key statistic changed)")
+                return section["content"]
 
             return enhanced
 
@@ -228,7 +264,7 @@ YOUR VOICE:
 Create an executive summary that:
 1. Opens with the key finding immediately (no generic intros)
 2. Uses personal voice ('I analyzed...', 'We see that...')
-3. Highlights the most important 2025 data points
+3. Highlights the most important H1 2026 data points
 4. Maintains all original statistics EXACTLY
 5. Does NOT expand beyond 15% of original length
 6. Links CWEs to https://cwe.mitre.org/data/definitions/{{number}}.html
@@ -289,6 +325,12 @@ def main():
     print("=" * 60)
     print("2026 First Half CVE Blog Enrichment with Gemini AI")
     print("=" * 60)
+
+    # Optional Gemini SDK (imported lazily so the rest of the module loads
+    # even when the dependency is absent).
+    genai = _import_genai()
+    if genai is None:
+        return
 
     # Check for API key
     api_key = get_api_key()
