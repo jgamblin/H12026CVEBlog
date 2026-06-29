@@ -78,6 +78,21 @@ before posting · 🗓️ resolves on the July 1 re-run.
 
 ---
 
+## 🌐 WordPress paste-readiness (publish day is Wednesday, July 1)
+
+A WordPress-expert pass found two paste-blockers and several hygiene issues. The
+mechanical ones are now automated by **`10_wordpress_export.py`** (runs as step 8 of
+`run_all.sh`, or standalone), which converts the freshly generated `blog.md` into
+`blog_wordpress.html`:
+
+- ✅ **Raw Markdown won't render in Gutenberg** (would publish literal `**`/`#`/`|`). The export runs the post through pandoc to real HTML, so headings, the `> Note` blockquote, links, and all ~11 pipe tables land as proper blocks. Paste path: editor → **Code editor** → paste `blog_wordpress.html` → back to **Visual**.
+- ✅ **Duplicate in-body H1** stripped (WordPress renders the post Title as the only H1).
+- ✅ **Featured-image HTML comment** stripped; export reminds you to set `00_scorecard.png` as the Document-panel Featured Image.
+- ✅ **Weak alt text** — bare chart titles replaced with data-forward descriptions (re-run-safe, no baked-in numbers).
+- ✅ **KEV table blank cells** render "No" (fixed in the generator).
+- 🔎 **Images still 404 until uploaded** (the one step that needs WordPress access): upload the 16 `graphs/*.png` to the Media Library and re-point. Shortcut: if you upload with original filenames, re-run `python3 10_wordpress_export.py --media-base-url https://jerrygamblin.com/wp-content/uploads/2026/07` to pre-fill the `src`s.
+- ⚖️ External-link new-tab behavior and the slug/meta are set in WordPress; the export prints the suggested **slug** (`2026-first-half-cve-data-review`) and **meta description**.
+
 ## 🗓️ Pre-publish mechanics (after the July 1 final run)
 
 1. Run the full pipeline so every figure is a true Jun-30 window; the "(partial)" tag and "floor" caveats should drop out automatically.

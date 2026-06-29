@@ -210,5 +210,10 @@ __marimo__/
 data/
 processed/
 
+# Generated blog artifacts (blog.md is the committed source of truth)
+blog_wordpress.html
+blog_enriched.md
+blog_original.md
+
 # Claude Code
 .claude/

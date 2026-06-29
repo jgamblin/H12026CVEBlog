@@ -74,6 +74,17 @@ else
     echo ""
 fi
 
+# Step 8: WordPress export (optional - requires pandoc)
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "[8/8] WordPress export..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if command -v pandoc >/dev/null 2>&1; then
+    python3 10_wordpress_export.py || echo "  (WordPress export failed)"
+else
+    echo "  Skipping (pandoc not installed; brew install pandoc to enable)"
+fi
+echo ""
+
 # Summary
 echo "============================================================"
 echo "✅ PIPELINE COMPLETE!"
@@ -83,6 +94,9 @@ echo "Generated files:"
 echo "  📄 blog.md           - Main blog post"
 if [ -f "blog_enriched.md" ]; then
     echo "  📄 blog_enriched.md  - AI-enhanced version"
+fi
+if [ -f "blog_wordpress.html" ]; then
+    echo "  📄 blog_wordpress.html - WordPress paste-ready HTML (Gutenberg Code editor)"
 fi
 echo "  📊 graphs/           - All visualizations"
 echo ""
