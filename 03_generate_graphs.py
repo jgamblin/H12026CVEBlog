@@ -1037,7 +1037,9 @@ def graph_cvss_by_year(df, save_path=None):
     years = sorted(df_recent["year"].unique())
     data = [df_recent[df_recent["year"] == y]["cvss_v3"].values for y in years]
 
-    bp = ax.boxplot(data, labels=years, patch_artist=True)
+    # matplotlib renamed boxplot's `labels` to `tick_labels` in 3.9 and removed
+    # `labels` in 3.11; use the current name (safe for the pinned >=3.9 range).
+    bp = ax.boxplot(data, tick_labels=years, patch_artist=True)
 
     # All boxes same primary color
     for i, box in enumerate(bp["boxes"]):
