@@ -6,7 +6,7 @@ We are halfway through 2026, so it is time for the mid-year CVE check-in. The sh
 
 ## TL;DR
 
-**The first half of 2026 produced 35,238 CVEs, more in six months than any full year before 2024 (all of 2023 finished at 28,817).** That works out to one new CVE every **7.4 minutes**, an increase of **88.6%** over the same window in 2025 (18,684). And yet only **85 of them (0.24%)** are known to be exploited (CISA KEV) so far, a floor that will rise as the cohort ages and exploitation is confirmed. That gap is the story of 2026 so far: we are minting CVEs faster than ever while confirmed exploitation stays rare, so the hard problem is signal-to-noise, not patch volume.
+**The first half of 2026 produced 35,238 CVEs, more in six months than any full year before 2024 (all of 2023 finished at 28,817).** That works out to one new CVE every **7.4 minutes**, an increase of **88.6%** over the same window in 2025 (18,684). And yet only **85 of them (0.24%)** have made CISA's KEV list so far, a floor that will rise as the cohort ages and exploitation is confirmed. That gap is the story of 2026 so far: we are minting CVEs faster than ever while confirmed exploitation stays rare, so the hard problem is signal-to-noise, not patch volume.
 
 At this pace the year projects to roughly **71,060 to 80,526**, and the all-time catalog has now passed **338,661 CVEs** since 1999.
 

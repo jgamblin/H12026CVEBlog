@@ -531,7 +531,7 @@ def generate_blog(
     )
     if kev_pct is not None:
         exploit_line = (
-            f" And yet only **{kev_in} of them ({kev_pct:.2f}%)** are known to be exploited (CISA KEV) "
+            f" And yet only **{kev_in} of them ({kev_pct:.2f}%)** have made CISA's KEV list "
             "so far, a floor that will rise as the cohort ages and exploitation is confirmed. "
             "That gap is the story of 2026 so far: we are minting CVEs faster than ever while confirmed "
             "exploitation stays rare, so the hard problem is signal-to-noise, not patch volume."
