@@ -174,7 +174,7 @@ def cwe_link(cwe):
 # Public-facing display names for raw CNA assigner_short_name values. The raw
 # catalog id (e.g. "GitHub_M") should never appear in reader-facing copy.
 _CNA_DISPLAY = {
-    "github_m": "GitHub",
+    "github_m": "GitHub Security Advisories",
 }
 
 
@@ -953,6 +953,8 @@ Not all CVEs have complete metadata. Here's how data quality has evolved over th
 | CWE Classification | {stats["cwe_coverage"]:.1f}% |
 | CPE Identifiers | {stats["cpe_coverage"]:.1f}% |
 
+This is where two ideas from the *CVE Decaf* work I did with Jay Jacobs get practical: **actionable data quality** (judge a record by whether it is complete enough to act on, not by abstract completeness) and **data provenance** (knowing which source asserted each field). The CPE gap is the clearest case. At **{stats["cpe_coverage"]:.1f}% CPE coverage**, nearly half of H1 2026 CVEs cannot be automatically matched to a product the day they publish, so for those records the answer to "can I act on this today?" is no, no matter how complete the rest of the entry looks. Scoring each record on its provenance (who supplied it) and on the fields that actually drive action (CPE for asset matching, KEV and EPSS for exploitability) is how you turn the raw feed into a measurable signal-to-noise ratio instead of a flat backlog.
+
 ---
 
 ## Rejected CVEs
@@ -1068,7 +1070,7 @@ Two primary data sources, plus two enrichment feeds:
 3. **Forecast** - [CVEForecast](https://www.cveforecast.org) full-year projection
 4. **Exploitation** - [CISA KEV catalog](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
 
-Everything here is reproducible. The full pipeline (Python, pandas, matplotlib) is on GitHub at [jgamblin/H12026CVEBlog](https://github.com/jgamblin/H12026CVEBlog), and it leans on the free CVE tooling I build at [RogoLabs](https://rogolabs.net): [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and [cveforecast.org](https://www.cveforecast.org).
+Everything here is reproducible. The full pipeline (Python, pandas, matplotlib) is on GitHub at [jgamblin/H12026CVEBlog](https://github.com/jgamblin/H12026CVEBlog), and it leans on the free CVE tooling I build at [RogoLabs](https://rogolabs.net): [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and [cveforecast.org](https://www.cveforecast.org). The data-quality and exploitability lenses above also draw on current vulnerability management research at [Empirical Security](https://www.empiricalsecurity.com).
 
 *Data collected and analyzed on {current_date}.*
 """
