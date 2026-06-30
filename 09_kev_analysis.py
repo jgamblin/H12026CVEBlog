@@ -114,10 +114,13 @@ def main():
     else:
         ransomware_h1 = added_h1.iloc[0:0]
 
-    # Notable examples: H1-2026-published CVEs that are already in KEV.
+    # Notable examples: H1-2026-published CVEs that are already in KEV,
+    # most recent additions first (the blog shows the latest few).
     examples = []
     if h1_in_kev:
-        ex_df = kev_df[kev_df["cveID"].isin(h1_in_kev)].sort_values("dateAdded")
+        ex_df = kev_df[kev_df["cveID"].isin(h1_in_kev)].sort_values(
+            "dateAdded", ascending=False
+        )
         for _, row in ex_df.head(8).iterrows():
             examples.append(
                 {

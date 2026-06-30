@@ -921,8 +921,9 @@ Note these are two different populations: the **{in_kev}** above are H1-2026-*pu
 """
         ex_rows = ""
         for e in kev.get("examples", [])[:5]:
+            cve_link = f"[{e['cve']}](https://www.cve.org/CVERecord?id={e['cve']})"
             ex_rows += (
-                f"| {e['cve']} | {pretty(e.get('vendor') or '')} | {e.get('product') or ''} | "
+                f"| {cve_link} | {pretty(e.get('vendor') or '')} | {e.get('product') or ''} | "
                 f"{e.get('date_added') or ''} | {'Yes' if e.get('ransomware') else 'No'} |\n"
             )
         if ex_rows:
@@ -930,7 +931,7 @@ Note these are two different populations: the **{in_kev}** above are H1-2026-*pu
             blog += f"""
 ### H1 2026 CVEs Already in KEV
 
-A sample (first {_shown} of {in_kev}, earliest additions first):
+A sample ({_shown} most recent of {in_kev}):
 
 | CVE | Vendor | Product | Added | Ransomware |
 |-----|--------|---------|-------|------------|

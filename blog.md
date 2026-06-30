@@ -223,15 +223,15 @@ Note these are two different populations: the **85** above are H1-2026-*publishe
 
 ### H1 2026 CVEs Already in KEV
 
-A sample (first 5 of 85, earliest additions first):
+A sample (5 most recent of 85):
 
 | CVE | Vendor | Product | Added | Ransomware |
 |-----|--------|---------|-------|------------|
-| CVE-2026-20805 | Microsoft | Windows | 2026-01-13 | No |
-| CVE-2026-20045 | Cisco | Unified Communications Manager | 2026-01-21 | No |
-| CVE-2026-24061 | Gnu | InetUtils | 2026-01-26 | No |
-| CVE-2026-21509 | Microsoft | Office | 2026-01-26 | No |
-| CVE-2026-23760 | Smartertools | SmarterMail | 2026-01-26 | Yes |
+| [CVE-2026-48558](https://www.cve.org/CVERecord?id=CVE-2026-48558) | Simplehelp | SimpleHelp | 2026-06-29 | No |
+| [CVE-2026-20230](https://www.cve.org/CVERecord?id=CVE-2026-20230) | Cisco | Unified Communications Manager | 2026-06-25 | No |
+| [CVE-2026-12569](https://www.cve.org/CVERecord?id=CVE-2026-12569) | Ptc | Windchill and FlexPLM | 2026-06-25 | No |
+| [CVE-2025-67038](https://www.cve.org/CVERecord?id=CVE-2025-67038) | Lantronix | EDS5000 | 2026-06-23 | No |
+| [CVE-2026-34910](https://www.cve.org/CVERecord?id=CVE-2026-34910) | Ubiquiti | UniFi OS | 2026-06-23 | No |
 
 ---
 
