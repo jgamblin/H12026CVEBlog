@@ -2,7 +2,7 @@
 
 > **FINAL — numbers locked to the July 1 run; live URL inserted.**
 > Post URL: **https://jerrygamblin.com/2026/07/01/3528/**
-> House style: no em dashes. Confirm handles (@rogolabs, infosec.exchange, Bluesky) before posting.
+> Each post below is in a code block so you can copy-paste it clean (no `>` markers). House style: no em dashes. Confirm handles (@rogolabs, infosec.exchange, Bluesky) before posting.
 
 ## The thesis (use everywhere)
 
@@ -10,8 +10,8 @@ We are manufacturing CVEs faster than ever, but confirmed exploitation has not k
 
 ## Hero assets
 
-- `00_scorecard.png` - the stat card (best single launch image)
-- `01_cves_by_year.png` - 2026 towers over every prior first half
+- `01_cves_by_year.png` - **launch hero** (the red 2026 bar towers over every prior year)
+- `00_scorecard.png` - stat card, good as a secondary/reference image
 - Each drip post pairs with its own chart (named below)
 
 ## Hero stats (final)
@@ -35,70 +35,112 @@ Launch with the thesis + hero image, then drip one finding per day, each with it
 ## Launch day (TODAY - post all four)
 
 ### LinkedIn
-> Halfway through 2026, and the CVE numbers are not subtle.
->
-> The first six months produced 35,364 CVEs. That is more than any full year on record before 2024. One new CVE every 7.4 minutes, up 49.5% over the same window last year.
->
-> But here is the number that should actually shape your patching strategy: of those 35,364, only 85 are on CISA's KEV list so far. That is 0.24% (a floor that climbs as the cohort ages, not a final rate).
->
-> The takeaway for security teams has not changed, it has just gotten louder. You cannot patch everything at once, so chasing raw volume is the wrong goal. Lead on exploitability, weight by what is actually exposed, and schedule the rest. Prioritize is not the same as ignore.
->
-> Full mid-year review, with the data and the code behind every chart: https://jerrygamblin.com/2026/07/01/3528/
->
-> How is your team triaging at 195 CVEs a day?
->
-> #vulnerabilitymanagement #cybersecurity #CVE
+Image: `01_cves_by_year.png`
+
+```
+Halfway through 2026, and the CVE numbers are not subtle.
+
+The first six months produced 35,364 CVEs. That is more than any full year on record before 2024. One new CVE every 7.4 minutes, up 49.5% over the same window last year.
+
+But here is the number that should actually shape your patching strategy: of those 35,364, only 85 are on CISA's KEV list so far. That is 0.24% (a floor that climbs as the cohort ages, not a final rate).
+
+The takeaway for security teams has not changed, it has just gotten louder. You cannot patch everything at once, so chasing raw volume is the wrong goal. Lead on exploitability, weight by what is actually exposed, and schedule the rest. Prioritize is not the same as ignore.
+
+Full mid-year review, with the data and the code behind every chart: https://jerrygamblin.com/2026/07/01/3528/
+
+How is your team triaging at 195 CVEs a day?
+
+#vulnerabilitymanagement #cybersecurity #CVE
+```
 
 ### Twitter / X (thread)
-> 1/ The first half of 2026 produced more CVEs than any full year before 2024.
->
-> 35,364 in six months. One every 7.4 minutes. Up 49.5% over H1 2025.
->
-> But only 85 are on CISA's KEV list. Mid-year CVE review 🧵 [attach 00_scorecard.png]
->
-> 2/ For scale: H1 2026 alone is bigger than the CVE program's entire first decade combined (1999-2008). The curve isn't bending, it's accelerating. [attach 01_cves_by_year.png]
->
-> 3/ The number that matters more than volume: 85 of 35,364 (0.24%) are on CISA's KEV list so far (a lagging floor that rises as the cohort ages). The overwhelming majority of CVEs are not confirmed-exploited. Volume is a triage problem, not a patch-everything problem.
->
-> 4/ Who's publishing all this? The CNA mix flipped. GitHub Security Advisories leads at 6,801; VulnCheck climbed to #3 (VulDB is #2). Platforms, ecosystems, and research CNAs now drive the numbers. High counts reflect scope, not padding. [attach 08_top_cnas.png]
->
-> 5/ CVEForecast (one of my own RogoLabs tools) projects 90,831 for the year. My call: we land closer to 72k. The model's gap rests entirely on a second-half surge that still has to show up.
->
-> 6/ Everything here is reproducible. Data, code, and every chart: https://jerrygamblin.com/2026/07/01/3528/
-> Built on the free tools at @rogolabs: cve.icu, cveforecast.org, cnascorecard.org
+Images: attach `01_cves_by_year.png` to tweet 1, `08_top_cnas.png` to tweet 4.
+
+```
+1/ The first half of 2026 produced more CVEs than any full year before 2024.
+
+35,364 in six months. One every 7.4 minutes. Up 49.5% over H1 2025.
+
+But only 85 are on CISA's KEV list. Mid-year CVE review 🧵
+```
+```
+2/ For scale: H1 2026 alone is bigger than the CVE program's entire first decade combined (1999-2008). The curve isn't bending, it's accelerating.
+```
+```
+3/ The number that matters more than volume: 85 of 35,364 (0.24%) are on CISA's KEV list so far (a lagging floor that rises as the cohort ages). The overwhelming majority of CVEs are not confirmed-exploited. Volume is a triage problem, not a patch-everything problem.
+```
+```
+4/ Who's publishing all this? The CNA mix flipped. GitHub Security Advisories leads at 6,801; VulnCheck climbed to #3 (VulDB is #2). Platforms, ecosystems, and research CNAs now drive the numbers. High counts reflect scope, not padding.
+```
+```
+5/ CVEForecast (one of my own RogoLabs tools) projects 90,831 for the year. My call: we land closer to 72k. The model's gap rests entirely on a second-half surge that still has to show up.
+```
+```
+6/ Everything here is reproducible. Data, code, and every chart: https://jerrygamblin.com/2026/07/01/3528/
+
+Built on the free tools at @rogolabs: cve.icu, cveforecast.org, cnascorecard.org
+```
 
 ### Mastodon (infosec.exchange; 500 chars, substance over hashtags)
-> Mid-year CVE check-in: the first half of 2026 produced 35,364 CVEs. More than any full year before 2024, and more than the program's entire first decade (1999-2008) combined. One every 7.4 minutes.
->
-> The counterweight: only 85 of them (0.24%) are on CISA's KEV list. Volume keeps climbing; confirmed exploitation stays rare. The signal-to-noise problem is the story.
->
-> Full writeup + reproducible code: https://jerrygamblin.com/2026/07/01/3528/
+Image: `01_cves_by_year.png`
+
+```
+Mid-year CVE check-in: the first half of 2026 produced 35,364 CVEs. More than any full year before 2024, and more than the program's entire first decade (1999-2008) combined. One every 7.4 minutes.
+
+The counterweight: only 85 of them (0.24%) are on CISA's KEV list. Volume keeps climbing; confirmed exploitation stays rare. The signal-to-noise problem is the story.
+
+Full writeup + reproducible code: https://jerrygamblin.com/2026/07/01/3528/
+```
 
 ### Bluesky (300 chars)
-> H1 2026: 35,364 CVEs. More than any full year before 2024. One every 7.4 minutes, +49.5% YoY.
->
-> But only 85 (0.24%) are on CISA's KEV list so far. We're drowning in CVEs while confirmed exploitation stays rare. That gap is the whole game.
->
-> Mid-year review + code: https://jerrygamblin.com/2026/07/01/3528/
+Image: `01_cves_by_year.png`
+
+```
+H1 2026: 35,364 CVEs. More than any full year before 2024. One every 7.4 minutes, +49.5% YoY.
+
+But only 85 (0.24%) are on CISA's KEV list so far. We're drowning in CVEs while confirmed exploitation stays rare. That gap is the whole game.
+
+Mid-year review + code: https://jerrygamblin.com/2026/07/01/3528/
+```
 
 ---
 
 ## The drip (days 1-5, one finding/day, starting tomorrow)
 
-**Day 1 - Exploitation rarity** (chart: KEV examples / 00_scorecard crop)
-> 0.24%. That's how many H1 2026 CVEs are on CISA's KEV list so far: 85 of 35,364 (a floor that rises as they age). CISA added 146 to KEV this half, 17 tied to ransomware. The lesson every defender knows but every dashboard forgets: exploitability is the first filter, not volume. How much of your queue is driven by raw count today? https://jerrygamblin.com/2026/07/01/3528/
+### Day 1 - Exploitation rarity
+Image: KEV examples / `00_scorecard.png` crop
 
-**Day 2 - The CNA flip** (chart: 08_top_cnas.png)
-> GitHub Security Advisories is now the #1 CVE issuer (6,801). VulnCheck climbed to #3 (VulDB sits #2). The people assigning CVEs changed in 2026: platforms, ecosystems, and research CNAs now set the pace. High counts reflect scope, not padding. What that means for data quality 👇 https://jerrygamblin.com/2026/07/01/3528/
+```
+0.24%. That's how many H1 2026 CVEs are on CISA's KEV list so far: 85 of 35,364 (a floor that rises as they age). CISA added 146 to KEV this half, 17 tied to ransomware. The lesson every defender knows but every dashboard forgets: exploitability is the first filter, not volume. How much of your queue is driven by raw count today? https://jerrygamblin.com/2026/07/01/3528/
+```
 
-**Day 3 - The OpenClaw story** (chart: 18_top_products.png)
-> ~500 of OpenClaw's 537 CVEs this half came from VulnCheck alone, disclosed steadily across the half. OpenClaw, the viral local AI agent (Peter Steinberger on Lex Fridman #491), is now a top-reported product of 2026, but that count tracks researcher attention, not bad code. The project also runs coordinated disclosure through GitHub. Is concentrated outside research a red flag or exactly what you'd want on a hot new target? I track it: github.com/jgamblin/OpenClawCVEs — https://jerrygamblin.com/2026/07/01/3528/
+### Day 2 - The CNA flip
+Image: `08_top_cnas.png`
 
-**Day 4 - Forecast scorecard** (chart: 01_cves_by_year.png)
-> Are we on pace? Two straight-line methods say ~72k for 2026. CVEForecast (one of my own RogoLabs tools) says 90,831. I think the model is high: its gap rests on a second-half surge that hasn't shown up. Planting a flag now, settling it in December. Where do you think 2026 lands? https://jerrygamblin.com/2026/07/01/3528/
+```
+GitHub Security Advisories is now the #1 CVE issuer (6,801). VulnCheck climbed to #3 (VulDB sits #2). The people assigning CVEs changed in 2026: platforms, ecosystems, and research CNAs now set the pace. High counts reflect scope, not padding. What that means for data quality 👇 https://jerrygamblin.com/2026/07/01/3528/
+```
 
-**Day 5 - Patch Tuesday myth + recap** (chart: 16_day_of_week.png)
-> Everyone says Patch Tuesday. The 2026 data says Wednesday (7,943 vs 7,216). The midweek bulge is driven less by Microsoft than by high-volume CNAs batch-publishing. What does your patch cadence actually look like? Full mid-year review, every chart: https://jerrygamblin.com/2026/07/01/3528/
+### Day 3 - The OpenClaw story
+Image: `18_top_products.png`
+
+```
+~500 of OpenClaw's 537 CVEs this half came from VulnCheck alone, disclosed steadily across the half. OpenClaw, the viral local AI agent (Peter Steinberger on Lex Fridman #491), is now a top-reported product of 2026, but that count tracks researcher attention, not bad code. The project also runs coordinated disclosure through GitHub. Is concentrated outside research a red flag or exactly what you'd want on a hot new target? I track it: github.com/jgamblin/OpenClawCVEs — https://jerrygamblin.com/2026/07/01/3528/
+```
+
+### Day 4 - Forecast scorecard
+Image: `01_cves_by_year.png`
+
+```
+Are we on pace? Two straight-line methods say ~72k for 2026. CVEForecast (one of my own RogoLabs tools) says 90,831. I think the model is high: its gap rests on a second-half surge that hasn't shown up. Planting a flag now, settling it in December. Where do you think 2026 lands? https://jerrygamblin.com/2026/07/01/3528/
+```
+
+### Day 5 - Patch Tuesday myth + recap
+Image: `16_day_of_week.png`
+
+```
+Everyone says Patch Tuesday. The 2026 data says Wednesday (7,943 vs 7,216). The midweek bulge is driven less by Microsoft than by high-volume CNAs batch-publishing. What does your patch cadence actually look like? Full mid-year review, every chart: https://jerrygamblin.com/2026/07/01/3528/
+```
 
 ---
 
