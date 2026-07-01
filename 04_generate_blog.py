@@ -605,7 +605,7 @@ At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and th
         model = forecast.get("model")
         mape = forecast.get("model_mape")
         model_note = f" ({model}, MAPE {mape})" if model else ""
-        url = forecast.get("url", "https://www.cveforecast.org")
+        url = forecast.get("url", "https://cveforecast.org")
         gap = fc - proj_hi
         if gap > 0:
             interp = (
@@ -625,7 +625,7 @@ At this pace the year projects to roughly **{proj_lo:,} to {proj_hi:,}**, and th
     else:
         forecast_block = (
             "_Forecast comparison pending: run `08_forecast_scorecard.py` to pull the latest "
-            "number from [cveforecast.org](https://www.cveforecast.org)._"
+            "number from [cveforecast.org](https://cveforecast.org)._"
         )
 
     # "What changed" callouts vs the same window a year ago.
@@ -1068,10 +1068,10 @@ Two primary data sources, plus two enrichment feeds:
 
 1. **NVD JSON** - National Vulnerability Database export from [nvd.handsonhacking.org](https://nvd.handsonhacking.org/nvd.json)
 2. **CVE List V5** - Official CVE records from [CVEProject/cvelistV5](https://github.com/CVEProject/cvelistV5)
-3. **Forecast** - [CVEForecast](https://www.cveforecast.org) full-year projection
+3. **Forecast** - [CVEForecast](https://cveforecast.org) full-year projection
 4. **Exploitation** - [CISA KEV catalog](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
 
-Everything here is reproducible. The full pipeline (Python, pandas, matplotlib) is on GitHub at [jgamblin/H12026CVEBlog](https://github.com/jgamblin/H12026CVEBlog), and it leans on the free CVE tooling I build at [RogoLabs](https://rogolabs.net): [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and [cveforecast.org](https://www.cveforecast.org).
+Everything here is reproducible. The full pipeline (Python, pandas, matplotlib) is on GitHub at [jgamblin/H12026CVEBlog](https://github.com/jgamblin/H12026CVEBlog), and it leans on the free CVE tooling I build at [RogoLabs](https://rogolabs.net): [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and [cveforecast.org](https://cveforecast.org).
 
 *Data collected and analyzed on {current_date}.*
 """

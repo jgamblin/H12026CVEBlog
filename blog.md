@@ -47,7 +47,7 @@ To keep the comparison honest while 2026 is still in progress, each year is meas
 
 At **195.4 CVEs/day**, two straight-line methods land close to each other (both are simple extrapolations of the same H1 run, so this is a sanity check, not two truly independent signals): the run-rate extrapolates to **71,314**, and a seasonality-adjusted estimate (scaling the pace across the full half, then dividing by 2025's 49% first-half share) to **72,008**.
 
-[CVEForecast](https://www.cveforecast.org), one of my own RogoLabs tools, projects **90,831 CVEs** for full-year 2026 (LinearRegression, MAPE 17.9), so I am partly arguing with my own model here. That is **18,823 above** the top of the straight-line range, and here is where I will plant a flag: **I think the model is high.** Both simple extrapolations land near 72,008, and the forecast's entire gap to them rests on a heavy second-half surge that still has to show up. **My call is the year closes nearer 72,008 than 90,831.** I will happily eat those words in the December review if H2 accelerates the way the model expects, but the burden of proof is on the surge.
+[CVEForecast](https://cveforecast.org), one of my own RogoLabs tools, projects **90,831 CVEs** for full-year 2026 (LinearRegression, MAPE 17.9), so I am partly arguing with my own model here. That is **18,823 above** the top of the straight-line range, and here is where I will plant a flag: **I think the model is high.** Both simple extrapolations land near 72,008, and the forecast's entire gap to them rests on a heavy second-half surge that still has to show up. **My call is the year closes nearer 72,008 than 90,831.** I will happily eat those words in the December review if H2 accelerates the way the model expects, but the burden of proof is on the surge.
 
 ---
 
@@ -309,9 +309,9 @@ Two primary data sources, plus two enrichment feeds:
 
 1. **NVD JSON** - National Vulnerability Database export from [nvd.handsonhacking.org](https://nvd.handsonhacking.org/nvd.json)
 2. **CVE List V5** - Official CVE records from [CVEProject/cvelistV5](https://github.com/CVEProject/cvelistV5)
-3. **Forecast** - [CVEForecast](https://www.cveforecast.org) full-year projection
+3. **Forecast** - [CVEForecast](https://cveforecast.org) full-year projection
 4. **Exploitation** - [CISA KEV catalog](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
 
-Everything here is reproducible. The full pipeline (Python, pandas, matplotlib) is on GitHub at [jgamblin/H12026CVEBlog](https://github.com/jgamblin/H12026CVEBlog), and it leans on the free CVE tooling I build at [RogoLabs](https://rogolabs.net): [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and [cveforecast.org](https://www.cveforecast.org).
+Everything here is reproducible. The full pipeline (Python, pandas, matplotlib) is on GitHub at [jgamblin/H12026CVEBlog](https://github.com/jgamblin/H12026CVEBlog), and it leans on the free CVE tooling I build at [RogoLabs](https://rogolabs.net): [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and [cveforecast.org](https://cveforecast.org).
 
 *Data collected and analyzed on July 01, 2026.*

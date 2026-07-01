@@ -13,7 +13,7 @@ pipeline to a half-year date window, with two mid-year additions:
 - **A real date window** instead of a year equality. All "current period" filters
   route through `period_config.py` (Jan 1 - Jun 30, 2026).
 - **A Forecast Scorecard.** `08_forecast_scorecard.py` pulls the published
-  [CVEForecast](https://www.cveforecast.org) feed so the post can grade H1 actuals
+  [CVEForecast](https://cveforecast.org) feed so the post can grade H1 actuals
   against the full-year projection.
 - **A Known-Exploited (KEV) section.** `09_kev_analysis.py` cross-references the
   CISA KEV catalog against the H1 CVE set, so the post leads with exploitation, not
@@ -27,7 +27,7 @@ pipeline to a half-year date window, with two mid-year additions:
 
 1. **NVD JSON** - National Vulnerability Database export from https://nvd.handsonhacking.org/nvd.json
 2. **CVE List V5** - Official CVE records from https://github.com/CVEProject/cvelistV5
-3. **CVEForecast** - Full-year projection feed from https://www.cveforecast.org
+3. **CVEForecast** - Full-year projection feed from https://cveforecast.org
 4. **CISA KEV** - Known Exploited Vulnerabilities catalog from https://www.cisa.gov/known-exploited-vulnerabilities-catalog
 
 ## Requirements
@@ -78,4 +78,4 @@ To re-target a future period, edit `period_config.py` only.
 
 This review is built on free CVE tooling from [RogoLabs](https://rogolabs.net):
 [cve.icu](https://cve.icu), [cnascorecard.org](https://cnascorecard.org), and
-[cveforecast.org](https://www.cveforecast.org).
+[cveforecast.org](https://cveforecast.org).

@@ -22,10 +22,10 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 # Live site first, then the raw GitHub copy as a fallback.
 DATA_URLS = [
-    "https://www.cveforecast.org/data.json",
+    "https://cveforecast.org/data.json",
     "https://raw.githubusercontent.com/RogoLabs/CVEForecast/main/web/data.json",
 ]
-SITE_URL = "https://www.cveforecast.org"
+SITE_URL = "https://cveforecast.org"
 TARGET_YEAR = "2026"
 
 
